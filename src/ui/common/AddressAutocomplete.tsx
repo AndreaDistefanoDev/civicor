@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import { withTypedHouseNumber } from '../../domain/address/houseNumber';
 import type { LatLng } from '../../domain/types';
 import type { AddressSuggestion, Geocoder } from '../../services/geocoder';
 import { OrsError } from '../../services/ors/orsClient';
+import './common.css';
 
 export const AUTOCOMPLETE_DELAY_MS = 250;
 export const AUTOCOMPLETE_MIN_CHARS = 3;
+
+/** 850 → "850 m", 1150 → "1,2 km", 23400 → "23 km" */
+export function formatDistance(m: number): string {
+  if (m < 1000) return `${Math.round(m / 10) * 10} m`;
+  if (m < 10000) return `${String(Math.round(m / 100) / 10).replace('.', ',')} km`;
+  return `${Math.round(m / 1000)} km`;
+}
 
 /** Campo di ricerca indirizzo con suggerimenti (attesa tra i tasti, minimo 3 caratteri). */
 export function AddressAutocomplete(props: {
@@ -31,7 +40,7 @@ export function AddressAutocomplete(props: {
       try {
         const r = await props.geocoder.autocomplete(query, props.focus);
         if (mine === seq.current) {
-          setResults(r);
+          setResults(r.map((s) => withTypedHouseNumber(s, query)));
           setError(undefined);
         }
       } catch (e) {
@@ -64,7 +73,11 @@ export function AddressAutocomplete(props: {
               <span className="grow">
                 <span className="autocomplete-main">{s.address.street}</span>
                 <span className="autocomplete-sub muted">{s.label}</span>
+                {s.precision !== 'house' && /\d/.test(s.address.street) && (
+                  <span className="autocomplete-warn">civico da verificare</span>
+                )}
               </span>
+              {s.distanceMeters !== undefined && <span className="autocomplete-dist num">{formatDistance(s.distanceMeters)}</span>}
             </button>
           </li>
         ))}

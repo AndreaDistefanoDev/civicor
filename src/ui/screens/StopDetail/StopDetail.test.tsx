@@ -80,3 +80,16 @@ it('Duplica crea una nuova fermata in fondo', async () => {
   const copy = (await listStops('r1'))[1];
   expect(copy).toMatchObject({ originalIndex: 1, displayId: 2, outcome: 'pending' });
 });
+
+it('aperta dalla ricerca offre "+ Aggiungi prossima fermata"', async () => {
+  const onAddNext = vi.fn();
+  renderDetail({ onAddNext });
+  await userEvent.click(await screen.findByRole('button', { name: '+ Aggiungi prossima fermata' }));
+  expect(onAddNext).toHaveBeenCalled();
+});
+
+it('aperta dalla lista non mostra "+ Aggiungi prossima fermata"', async () => {
+  renderDetail();
+  await screen.findByText('Via Esempio, 12');
+  expect(screen.queryByRole('button', { name: '+ Aggiungi prossima fermata' })).toBeNull();
+});

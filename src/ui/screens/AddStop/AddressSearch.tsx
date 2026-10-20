@@ -1,11 +1,11 @@
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { addStopFromSuggestion, changeStopAddress, routeFocus } from '../../../data/manualAdd';
+import { addStopFromSuggestion, changeStopAddress } from '../../../data/manualAdd';
 import type { LatLng } from '../../../domain/types';
 import type { Geocoder } from '../../../services/geocoder';
 import { geocodeQueue } from '../../appServices';
 import { AddressAutocomplete } from '../../common/AddressAutocomplete';
 import { Screen } from '../../common/ui';
+import { useNearbyFocus } from '../../useNearbyFocus';
 import './AddStop.css';
 
 /** Ricerca con suggerimenti; con `stopId` cambia l'indirizzo di quella fermata invece di aggiungerne una. */
@@ -17,10 +17,12 @@ export function AddressSearch(props: {
   onClose: () => void;
   onPickOnMap: () => void;
   onPaste: () => void;
+  /** Se presente, dopo la scelta si apre la scheda della fermata appena aggiunta. */
+  onAdded?: (stopId: string) => void;
 }) {
   const [added, setAdded] = useState<string>();
-  const routeCenter = useLiveQuery(() => routeFocus(props.routeId), [props.routeId]);
-  const focus = props.focus ?? routeCenter;
+  const nearby = useNearbyFocus(props.routeId);
+  const focus = props.focus ?? nearby;
   const [round, setRound] = useState(0);
 
   return (
@@ -44,6 +46,10 @@ export function AddressSearch(props: {
           }
           const stop = await addStopFromSuggestion(props.routeId, s);
           if (stop.geoStatus === 'pending') geocodeQueue.enqueue(stop.id);
+          if (props.onAdded) {
+            props.onAdded(stop.id);
+            return;
+          }
           setAdded(stop.address.street);
           setRound(round + 1); // campo vuoto per la fermata successiva
         }}

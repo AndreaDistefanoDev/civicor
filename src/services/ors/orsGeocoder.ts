@@ -1,3 +1,4 @@
+import { distanceMeters } from '../../domain/geocode/classify';
 import type { Address, LatLng } from '../../domain/types';
 import type { AddressSuggestion, GeoPrecision, GeocodeHit, Geocoder } from '../geocoder';
 import { orsFetch } from './orsClient';
@@ -49,6 +50,8 @@ function toHit(f: PeliasFeature): GeocodeHit {
   return hit;
 }
 
+const NEARBY_KM = 50;
+
 function focusParams(focus?: LatLng): Record<string, string> {
   return focus ? { 'focus.point.lat': String(focus.lat), 'focus.point.lon': String(focus.lng) } : {};
 }
@@ -75,10 +78,27 @@ export function createOrsGeocoder(getApiKey: () => Promise<string | undefined>):
       return search('/pelias/v1/search', { text, 'boundary.country': 'IT', size: '3', ...focusParams(focus) });
     },
     async autocomplete(text, focus) {
-      const hits = await search('/pelias/v1/autocomplete', { text, 'boundary.country': 'IT', ...focusParams(focus) });
+      const base = { text, 'boundary.country': 'IT', ...focusParams(focus) };
+      // Prima entro 50 km dal telefono: ci sono tante vie con lo stesso nome in città diverse.
+      let hits = focus
+        ? await search('/pelias/v1/autocomplete', {
+            ...base,
+            'boundary.circle.lat': String(focus.lat),
+            'boundary.circle.lon': String(focus.lng),
+            'boundary.circle.radius': String(NEARBY_KM),
+          })
+        : [];
+      if (hits.length === 0) hits = await search('/pelias/v1/autocomplete', base);
       return hits
         .filter((h): h is GeocodeHit & { address: Address } => !!h.address)
-        .map<AddressSuggestion>((h) => ({ label: h.label, address: h.address, location: h.location, precision: h.precision }));
+        .map<AddressSuggestion>((h) => ({
+          label: h.label,
+          address: h.address,
+          location: h.location,
+          precision: h.precision,
+          distanceMeters: focus ? distanceMeters(focus, h.location) : undefined,
+        }))
+        .sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
     },
   };
 }

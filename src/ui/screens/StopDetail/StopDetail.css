@@ -27,3 +27,4 @@
 .window-row .field:first-child { padding-right: 6px; }
 .window-row .field:last-child { padding-left: 6px; }
 .add-window { margin: 0 16px; }
+.add-next { padding: 0 16px 12px; }

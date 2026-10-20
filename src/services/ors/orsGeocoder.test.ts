@@ -77,3 +77,28 @@ it('autocompletamento restituisce suggerimenti con indirizzo', async () => {
   expect(s[0]).toMatchObject({ label: 'Via Esempio 12, Ragusa, RG, Italia', precision: 'house',
     address: { street: 'Via Esempio, 12', city: 'Ragusa' } });
 });
+
+describe('suggerimenti vicini alla posizione', () => {
+  const me = { lat: 36.925, lng: 14.73 };
+  const far = feature('address', 9.19, 45.46, { label: 'Via Roma 20, Milano' });
+  const near = feature('address', 14.731, 36.926, { label: 'Via Roma 20, Ragusa' });
+
+  it('cerca prima entro 50 km e ordina dal più vicino', async () => {
+    fetchMock.mockReturnValue(json(200, { features: [far, near] }));
+    const s = await createOrsGeocoder(async () => 'k').autocomplete('via roma 20', me);
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.get('boundary.circle.lat')).toBe('36.925');
+    expect(url.searchParams.get('boundary.circle.lon')).toBe('14.73');
+    expect(url.searchParams.get('boundary.circle.radius')).toBe('50');
+    expect(s.map((x) => x.label)).toEqual(['Via Roma 20, Ragusa', 'Via Roma 20, Milano']);
+    expect(s[0].distanceMeters).toBeLessThan(200);
+  });
+
+  it('se vicino non trova niente cerca in tutta Italia', async () => {
+    fetchMock.mockReturnValueOnce(json(200, { features: [] })).mockReturnValueOnce(json(200, { features: [far] }));
+    const s = await createOrsGeocoder(async () => 'k').autocomplete('via roma 20', me);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(new URL(fetchMock.mock.calls[1][0]).searchParams.get('boundary.circle.lat')).toBeNull();
+    expect(s.map((x) => x.label)).toEqual(['Via Roma 20, Milano']);
+  });
+});

@@ -54,3 +54,9 @@
   margin: 8px 16px 0; padding: 8px 12px; border-radius: 12px; background: var(--surface-2); font-size: 15px;
 }
 .geo-status.error { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, var(--surface)); font-weight: 600; }
+.autocomplete-list { list-style: none; margin: 0; padding: 0; }
+.autocomplete-main { display: block; font-weight: 600; }
+.autocomplete-sub { display: block; font-size: 14px; }
+.autocomplete-error { margin: 0 16px 8px; color: var(--warn); }
+.autocomplete-warn { display: block; font-size: 13px; color: var(--warn); font-weight: 600; }
+.autocomplete-dist { color: var(--muted); font-size: 16px; white-space: nowrap; }

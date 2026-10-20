@@ -20,6 +20,12 @@ it('senza percorsi di oggi invita a crearne uno', async () => {
   expect(screen.getByRole('dialog', { name: 'Crea percorso' })).toBeInTheDocument();
 });
 
+it('dalla schermata iniziale si aprono le Impostazioni', async () => {
+  render(<App />);
+  await userEvent.click(await screen.findByRole('button', { name: 'Impostazioni' }));
+  expect(await screen.findByRole('dialog', { name: 'Impostazioni' })).toBeInTheDocument();
+});
+
 it('apre il percorso di oggi con lo stato vuoto', async () => {
   await createRoute({ date: todayIso(), name: 'Giro di prova' });
   render(<App />);

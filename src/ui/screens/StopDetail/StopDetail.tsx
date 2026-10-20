@@ -47,7 +47,14 @@ export function formatService(minutes: number): string {
   return s ? `${m} min ${s} s` : `${m} min`;
 }
 
-export function StopDetail(props: { stopId: string; onClose: () => void; onManageTypes: () => void; onChangeAddress: (stopId: string) => void }) {
+export function StopDetail(props: {
+  stopId: string;
+  onClose: () => void;
+  onManageTypes: () => void;
+  onChangeAddress: (stopId: string) => void;
+  /** Aperta subito dopo l'aggiunta dalla ricerca: torna alla ricerca per la fermata successiva. */
+  onAddNext?: () => void;
+}) {
   const stop = useLiveQuery(() => getStop(props.stopId), [props.stopId]);
   const types = useLiveQuery(listStopTypes, []);
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -58,6 +65,13 @@ export function StopDetail(props: { stopId: string; onClose: () => void; onManag
 
   return (
     <Screen title={stop.outcome === 'pending' && stop.geoStatus !== 'ok' ? 'Fermata da verificare' : 'Fermata'} onClose={props.onClose}>
+      {props.onAddNext && (
+        <div className="add-next">
+          <button className="btn-primary" onClick={props.onAddNext}>
+            + Aggiungi prossima fermata
+          </button>
+        </div>
+      )}
       <div className="stop-head">
         <div className="stop-head-id muted">ID {stop.displayId}</div>
         <h2 className="stop-head-line">{formatAddressLine(stop.address)}</h2>

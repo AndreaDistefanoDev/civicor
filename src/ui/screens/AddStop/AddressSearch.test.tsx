@@ -82,3 +82,39 @@ it('se il riconoscimento vocale fallisce passa al microfono della tastiera', asy
   expect(screen.getByLabelText('Cerca indirizzo')).toBeInTheDocument();
   vi.unstubAllGlobals();
 });
+
+it('scelto un indirizzo apre subito la scheda della fermata', async () => {
+  const onAdded = vi.fn();
+  render(<AddressSearch routeId="r1" geocoder={geocoder} onClose={vi.fn()} onPickOnMap={vi.fn()} onPaste={vi.fn()} onAdded={onAdded} />);
+  await userEvent.type(screen.getByLabelText('Cerca indirizzo'), 'Via Rom');
+  await userEvent.click(await screen.findByRole('button', { name: /Via Roma 20, Ragusa/ }));
+  await waitFor(() => expect(onAdded).toHaveBeenCalled());
+  const [stop] = await listStops('r1');
+  expect(onAdded).toHaveBeenCalledWith(stop.id);
+});
+
+it('il civico scritto non si perde se la mappa propone solo la via', async () => {
+  vi.mocked(geocoder.autocomplete).mockResolvedValueOnce([{ label: 'Via Roma, Ragusa', precision: 'street',
+    address: { street: 'Via Roma', city: 'Ragusa', postcode: '97100' }, location: { lat: 36.9, lng: 14.7 } }]);
+  render(<AddressSearch routeId="r1" geocoder={geocoder} onClose={vi.fn()} onPickOnMap={vi.fn()} onPaste={vi.fn()} />);
+  await userEvent.type(screen.getByLabelText('Cerca indirizzo'), 'Via Roma 20');
+  expect(await screen.findByText('Via Roma, 20')).toBeInTheDocument();
+  expect(screen.getByText('civico da verificare')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /Via Roma, 20/ }));
+  await waitFor(async () => expect(await listStops('r1')).toHaveLength(1));
+  expect((await listStops('r1'))[0]).toMatchObject({ address: { street: 'Via Roma, 20' }, geoStatus: 'uncertain',
+    geoReason: 'civico non trovato, punto a metà strada' });
+});
+
+it('usa la posizione GPS del telefono e mostra la distanza', async () => {
+  vi.stubGlobal('navigator', { ...navigator, geolocation: {
+    getCurrentPosition: (ok: PositionCallback) => ok({ coords: { latitude: 36.9, longitude: 14.7 } } as GeolocationPosition) } });
+  vi.mocked(geocoder.autocomplete).mockResolvedValueOnce([{ label: 'Via Roma 20, Ragusa', precision: 'house',
+    address: { street: 'Via Roma, 20', city: 'Ragusa' }, location: { lat: 36.91, lng: 14.7 }, distanceMeters: 1150 }]);
+  render(<AddressSearch routeId="r1" geocoder={geocoder} onClose={vi.fn()} onPickOnMap={vi.fn()} onPaste={vi.fn()} />);
+  await new Promise((r) => setTimeout(r, 30));
+  await userEvent.type(screen.getByLabelText('Cerca indirizzo'), 'Via Rom');
+  await waitFor(() => expect(geocoder.autocomplete).toHaveBeenCalledWith('Via Rom', { lat: 36.9, lng: 14.7 }));
+  expect(await screen.findByText('1,2 km')).toBeInTheDocument();
+  vi.unstubAllGlobals();
+});

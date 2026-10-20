@@ -15,6 +15,8 @@ export interface AddressSuggestion {
   address: Address;
   location: LatLng;
   precision: GeoPrecision;
+  /** Distanza dal punto di riferimento (posizione del telefono), se noto. */
+  distanceMeters?: number;
 }
 
 export interface Geocoder {

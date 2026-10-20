@@ -1,18 +1,19 @@
-import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
-import { addStopFromSuggestion, routeFocus } from '../../../data/manualAdd';
+import { addStopFromSuggestion } from '../../../data/manualAdd';
+import { withTypedHouseNumber } from '../../../domain/address/houseNumber';
 import { createSpeechInput } from '../../../device/speech';
 import type { LatLng } from '../../../domain/types';
 import type { Geocoder } from '../../../services/geocoder';
 import { AddressAutocomplete } from '../../common/AddressAutocomplete';
 import { Screen } from '../../common/ui';
+import { useNearbyFocus } from '../../useNearbyFocus';
 import './AddStop.css';
 
 /** "Pronuncia indirizzo": ogni frase riconosciuta diventa una fermata (primo suggerimento). */
 export function VoiceInput(props: { routeId: string; geocoder: Geocoder; focus?: LatLng; onClose: () => void }) {
   const speech = useMemo(() => createSpeechInput('it-IT'), []);
-  const routeCenter = useLiveQuery(() => routeFocus(props.routeId), [props.routeId]);
-  const focus = props.focus ?? routeCenter;
+  const nearby = useNearbyFocus(props.routeId);
+  const focus = props.focus ?? nearby;
   const [listening, setListening] = useState(false);
   const [heard, setHeard] = useState<string[]>([]);
   const [message, setMessage] = useState<string>();
@@ -26,7 +27,7 @@ export function VoiceInput(props: { routeId: string; geocoder: Geocoder; focus?:
         setMessage(`Non trovato: "${text}"`);
         return;
       }
-      const stop = await addStopFromSuggestion(props.routeId, first);
+      const stop = await addStopFromSuggestion(props.routeId, withTypedHouseNumber(first, text));
       setHeard((h) => [stop.address.street, ...h]);
       setMessage(undefined);
     } catch (e) {

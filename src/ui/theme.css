@@ -106,3 +106,4 @@ button { cursor: pointer; }
 }
 .welcome-brand { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 700; color: var(--accent); }
 .welcome-text { margin: 0 0 18px; font-size: 20px; color: var(--muted); }
+.welcome-settings { justify-self: center; margin-top: 8px; }
