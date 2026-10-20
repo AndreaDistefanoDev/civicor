@@ -1,0 +1,10 @@
+.types-notice { margin: 0 16px 8px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); color: var(--muted); }
+.types-list { list-style: none; margin: 0; padding: 0; }
+.types-row { display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+.types-open { flex: 1; display: flex; align-items: center; gap: 12px; padding: 16px; background: none; border: 0; text-align: left; }
+.types-move { display: flex; gap: 4px; padding-right: 12px; }
+.types-move button { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); }
+.types-move button:disabled { opacity: 0.3; }
+.color-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+.color-swatch { aspect-ratio: 1; border-radius: 50%; border: 3px solid transparent; }
+.color-swatch[aria-checked='true'] { border-color: var(--text); }

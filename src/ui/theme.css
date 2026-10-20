@@ -1,0 +1,108 @@
+/*
+ * Civicor — asfalto e segnaletica.
+ * Sfondo grigio-blu asfalto, accento giallo segnaletica, Barlow (ispirato ai cartelli autostradali).
+ * L'unico elemento "forte" sono le targhette numerate delle fermate; il resto resta sobrio.
+ */
+:root,
+[data-theme='dark'] {
+  --bg: #12161c;          /* asfalto */
+  --surface: #1b2129;     /* lamiera */
+  --surface-2: #262e38;   /* grafite */
+  --line: #323b47;
+  --text: #eef2f6;
+  --muted: #8e99a8;       /* nebbia */
+  --accent: #ffc23d;      /* giallo segnaletica */
+  --accent-ink: #1d1600;
+  --ok: #3fcf7a;
+  --warn: #ff7a59;        /* da verificare */
+  --danger: #ff4d5e;
+  --scrim: rgba(6, 8, 11, 0.6);
+  color-scheme: dark;
+}
+[data-theme='light'] {
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --surface-2: #e9edf1;
+  --line: #d3d9e0;
+  --text: #121820;
+  --muted: #5a6573;
+  --accent: #ffb81f;
+  --accent-ink: #1d1600;
+  --ok: #17924a;
+  --warn: #d4532f;
+  --danger: #d1283b;
+  --scrim: rgba(18, 24, 32, 0.35);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', -apple-system, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+input, textarea { -webkit-user-select: text; user-select: text; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.num { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  display: block; width: 100%; border-radius: 14px; padding: 15px 16px;
+  font-weight: 600; font-size: 17px; text-align: center;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); border: 0; }
+.btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
+.btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+.btn-primary:disabled { opacity: 0.45; }
+.link-btn { background: none; border: 0; color: var(--accent); padding: 10px 0; font-weight: 600; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 22px; border: 0; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--text);
+}
+
+/* Righe di impostazione / dettaglio */
+.row {
+  display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 16px;
+  border-bottom: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-top: 0;
+  width: 100%; text-align: left;
+}
+.row .grow { flex: 1; min-width: 0; }
+.row .value { color: var(--muted); }
+
+.field { display: block; padding: 0 16px 14px; }
+.field > span { display: block; color: var(--muted); font-size: 15px; margin-bottom: 6px; }
+.field input, .field textarea, .field select {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 13px 14px; font-size: 17px;
+}
+
+.segmented { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 2px; }
+.segmented button {
+  border: 0; background: none; padding: 7px 12px; border-radius: 8px; color: var(--muted); font-weight: 600;
+}
+.segmented button[aria-pressed='true'] { background: var(--bg); color: var(--text); }
+
+.section-title { padding: 18px 16px 6px; color: var(--muted); font-size: 15px; font-weight: 600; }
+
+.welcome {
+  min-height: 100%; display: grid; align-content: center; gap: 12px; padding: 24px;
+  max-width: 420px; margin: 0 auto;
+}
+.welcome-brand { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 700; color: var(--accent); }
+.welcome-text { margin: 0 0 18px; font-size: 20px; color: var(--muted); }

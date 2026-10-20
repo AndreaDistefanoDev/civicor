@@ -1,0 +1,13 @@
+.verify-map { position: relative; height: 46vh; min-height: 260px; }
+.verify-hint {
+  position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 3; padding: 6px 12px;
+  border-radius: 16px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 14px; white-space: nowrap;
+}
+.verify-info { padding: 14px 16px; display: grid; gap: 6px; }
+.verify-line { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; }
+.verify-reason { color: var(--warn); font-weight: 600; }
+.verify-notes { margin: 6px 0; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.verify-notes .muted { font-size: 14px; }
+.verify-remember { text-align: center; margin: 2px 0 0; font-size: 14px; }
+.verify-skip { justify-self: center; }
+.verify-info .btn-primary { margin-top: 8px; }

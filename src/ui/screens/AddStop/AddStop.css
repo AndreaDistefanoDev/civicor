@@ -1,0 +1,16 @@
+.added-banner { margin: 0 16px 10px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--ok) 20%, var(--surface)); font-weight: 600; }
+.add-alt { margin-top: 12px; border-top: 1px solid var(--line); }
+.pick-map { position: relative; height: 55vh; }
+.voice { display: grid; justify-items: center; gap: 14px; padding: 24px 16px; text-align: center; }
+.voice .btn-secondary { max-width: 320px; }
+.voice-orb {
+  width: 120px; height: 120px; border-radius: 50%; border: 0; background: var(--accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.voice-orb.listening { animation: orb 1.2s ease-out infinite; }
+@keyframes orb { to { box-shadow: 0 0 0 28px transparent; } }
+.voice-prompt { margin: 0; font-size: 22px; font-weight: 600; }
+.voice-message { margin: 0; color: var(--warn); }
+.voice-heard { list-style: none; padding: 0; margin: 0; text-align: left; width: 100%; max-width: 360px; }
+.voice-heard li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.voice-fallback { padding: 0 16px; }
