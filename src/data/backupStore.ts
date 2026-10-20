@@ -3,7 +3,8 @@ import { db } from './db';
 import { getSettings, listUnreadableCodes, saveSettings } from './repos';
 
 export async function exportBackup(): Promise<BackupFile> {
-  const { orsApiKey: _key, ...settings } = await getSettings();
+  // Le chiavi dei servizi restano solo sul telefono: mai nei backup.
+  const { orsApiKey: _ors, googleApiKey: _google, ...settings } = await getSettings();
   const corrections = (await db.corrections.toArray()).map(({ key, location, label }) => ({ key, location, label }));
   return {
     app: 'civicor',
@@ -31,7 +32,10 @@ export async function importBackup(file: BackupFile): Promise<{ routes: number; 
       file.unreadableCodes.filter((p) => !existing.has(p)).map((payload) => ({ payload, createdAt: now })),
     );
   });
-  const { orsApiKey: _ignored, ...settings } = file.settings as BackupFile['settings'] & { orsApiKey?: string };
+  const { orsApiKey: _ors, googleApiKey: _google, ...settings } = file.settings as BackupFile['settings'] & {
+    orsApiKey?: string;
+    googleApiKey?: string;
+  };
   await saveSettings(settings);
   return { routes: file.routes.length, corrections: file.corrections.length };
 }

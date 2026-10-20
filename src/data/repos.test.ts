@@ -65,7 +65,7 @@ it('duplicare un percorso copia le fermate riportandole da fare', async () => {
 
 it('impostazioni predefinite su database vuoto', async () => {
   expect(await getSettings()).toEqual({ navApp: 'waze', defaultServiceMinutes: 1, vehicle: 'car',
-    avoidTolls: false, idMode: 'classic', theme: 'dark', retentionMonths: 12 });
+    avoidTolls: false, idMode: 'classic', theme: 'dark', retentionMonths: 12, geocoderProvider: 'osm' });
 });
 
 it('crea il tipo Standard una sola volta', async () => {

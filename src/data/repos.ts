@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   idMode: 'classic',
   theme: 'dark',
   retentionMonths: 12,
+  geocoderProvider: 'osm',
 };
 
 const DEFAULT_ROUTE_SETTINGS: RouteSettings = { start: { mode: 'current' }, startTime: 'now', end: { mode: 'return' } };

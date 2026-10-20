@@ -7,10 +7,17 @@ import { createMatrixCache } from '../services/matrixCache';
 import { createOrsGeocoder } from '../services/ors/orsGeocoder';
 import { createOrsRouting } from '../services/ors/orsRouting';
 import { optimizeInWorker } from '../services/optimizeClient';
+import { createGoogleGeocoder } from '../services/google/googleGeocoder';
+import { createSwitchingGeocoder } from '../services/switchingGeocoder';
 
 const apiKey = async () => (await getSettings()).orsApiKey;
 
-export const geocoder = createOrsGeocoder(apiKey);
+/** Indirizzi: Google o OpenStreetMap secondo le Impostazioni. Distanze e percorso restano su OpenRouteService. */
+export const geocoder = createSwitchingGeocoder({
+  google: createGoogleGeocoder(async () => (await getSettings()).googleApiKey),
+  osm: createOrsGeocoder(apiKey),
+  provider: async () => (await getSettings()).geocoderProvider,
+});
 export const routing = createOrsRouting(apiKey);
 export const matrixCache = createMatrixCache(routing);
 export const geocodeQueue = createGeocodeQueue({

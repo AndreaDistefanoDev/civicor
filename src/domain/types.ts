@@ -87,6 +87,9 @@ export interface AppSettings {
   idMode: 'classic' | 'after_optimization';
   theme: 'dark' | 'light' | 'auto';
   orsApiKey?: string;
+  /** Motore per trovare gli indirizzi: Google (più preciso sui civici) o OpenStreetMap (gratis, senza carta). */
+  geocoderProvider: 'google' | 'osm';
+  googleApiKey?: string;
   retentionMonths: number | null;
   defaultRouteSettings?: RouteSettings;
 }

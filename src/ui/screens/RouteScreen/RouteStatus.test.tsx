@@ -82,3 +82,12 @@ it('fermate ancora in ricerca → avviso senza rimandare alla verifica', async (
   expect(await screen.findByText('1 fermate ancora in ricerca della posizione')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Verifica ora' })).toBeNull();
 });
+
+it('salvare la chiave Google o cambiare motore fa ripartire la ricerca', async () => {
+  renderScreen(routeId);
+  await waitFor(() => expect(svc.enqueueRoute).toHaveBeenCalledTimes(1));
+  await saveSettings({ geocoderProvider: 'google' });
+  await waitFor(() => expect(svc.enqueueRoute).toHaveBeenCalledTimes(2));
+  await saveSettings({ googleApiKey: 'gk' });
+  await waitFor(() => expect(svc.enqueueRoute).toHaveBeenCalledTimes(3));
+});

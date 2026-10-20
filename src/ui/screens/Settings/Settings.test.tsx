@@ -34,3 +34,11 @@ it('importare un file non valido mostra un messaggio', async () => {
   await userEvent.upload(await screen.findByLabelText('Importa backup'), file);
   expect(await screen.findByText('File di backup non valido')).toBeInTheDocument();
 });
+
+it('sceglie Google per la ricerca indirizzi e ne salva la chiave', async () => {
+  render(<Settings onClose={() => {}} />);
+  await userEvent.selectOptions(await screen.findByLabelText('Ricerca indirizzi'), 'Google (più preciso)');
+  await userEvent.type(screen.getByLabelText('Chiave Google'), 'gk123');
+  await userEvent.tab();
+  await waitFor(async () => expect(await getSettings()).toMatchObject({ geocoderProvider: 'google', googleApiKey: 'gk123' }));
+});

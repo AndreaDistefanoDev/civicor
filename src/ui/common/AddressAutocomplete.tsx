@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { withTypedHouseNumber } from '../../domain/address/houseNumber';
 import type { LatLng } from '../../domain/types';
-import type { AddressSuggestion, Geocoder } from '../../services/geocoder';
+import { resolveSuggestion, type AddressSuggestion, type Geocoder, type LocatedSuggestion } from '../../services/geocoder';
 import { OrsError } from '../../services/ors/orsClient';
 import './common.css';
 
@@ -21,7 +21,8 @@ export function AddressAutocomplete(props: {
   focus?: LatLng;
   autoFocus?: boolean;
   placeholder?: string;
-  onPick: (s: AddressSuggestion) => void;
+  /** Riceve il suggerimento completo di posizione (letto dal fornitore se serve). */
+  onPick: (s: LocatedSuggestion) => void;
   footer?: React.ReactNode;
 }) {
   const [text, setText] = useState('');
@@ -52,6 +53,15 @@ export function AddressAutocomplete(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
 
+  const pick = async (s: AddressSuggestion) => {
+    try {
+      // Il civico scritto resta anche se il luogo letto ha solo la via.
+      props.onPick(withTypedHouseNumber(await resolveSuggestion(props.geocoder, s), text) as LocatedSuggestion);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Indirizzo non disponibile');
+    }
+  };
+
   return (
     <div className="autocomplete">
       <div className="field">
@@ -68,8 +78,8 @@ export function AddressAutocomplete(props: {
       {error && <p className="autocomplete-error">{error}</p>}
       <ul className="autocomplete-list">
         {results.map((s) => (
-          <li key={`${s.label}-${s.location.lat}-${s.location.lng}`}>
-            <button className="row" onClick={() => props.onPick(s)}>
+          <li key={s.placeId ?? `${s.label}-${s.location?.lat}-${s.location?.lng}`}>
+            <button className="row" onClick={() => void pick(s)}>
               <span className="grow">
                 <span className="autocomplete-main">{s.address.street}</span>
                 <span className="autocomplete-sub muted">{s.label}</span>

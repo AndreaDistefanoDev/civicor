@@ -112,6 +112,29 @@ export function Settings(props: { onClose: () => void }) {
       </Section>
 
       <Section title="Servizi">
+        <SelectRow
+          label="Ricerca indirizzi"
+          value={settings.geocoderProvider}
+          options={[['google', 'Google (più preciso)'], ['osm', 'OpenStreetMap (gratis)']]}
+          onChange={(geocoderProvider) => save({ geocoderProvider })}
+        />
+        {settings.geocoderProvider === 'google' && (
+          <>
+            <label className="field ors-field">
+              <span>Chiave Google</span>
+              <input
+                type="password"
+                autoComplete="off"
+                defaultValue={settings.googleApiKey ?? ''}
+                onBlur={(e) => save({ googleApiKey: e.target.value.trim() || undefined })}
+              />
+            </label>
+            <p className="settings-hint muted">
+              Trova i civici con la precisione di Google Maps. Serve una chiave Google Maps Platform con Places API (New) e
+              Geocoding API attive. Resta solo su questo telefono.
+            </p>
+          </>
+        )}
         <label className="field ors-field">
           <span>Chiave OpenRouteService</span>
           <input
@@ -122,7 +145,7 @@ export function Settings(props: { onClose: () => void }) {
           />
         </label>
         <p className="settings-hint muted">
-          Serve per trovare gli indirizzi e calcolare il percorso. È gratuita:{' '}
+          Serve per calcolare il percorso{settings.geocoderProvider === 'osm' ? ' e trovare gli indirizzi' : ''}. È gratuita:{' '}
           <a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noreferrer">
             registrati su openrouteservice.org
           </a>{' '}

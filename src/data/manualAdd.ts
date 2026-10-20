@@ -1,7 +1,7 @@
 import { addressKey, hasHouseNumber } from '../domain/address/normalize';
 import { classifyGeocode, distanceMeters } from '../domain/geocode/classify';
 import type { Address, LatLng, Stop } from '../domain/types';
-import type { AddressSuggestion, Geocoder } from '../services/geocoder';
+import type { Geocoder, LocatedSuggestion } from '../services/geocoder';
 import { getCorrection, getRoute, getSettings, getStop, listStops, newId, putStop } from './repos';
 
 type Located = Pick<Stop, 'geoStatus' | 'location' | 'geoReason'>;
@@ -31,7 +31,7 @@ export async function routeFocus(routeId: string): Promise<LatLng | undefined> {
   return located?.location ?? (await getRoute(routeId))?.startLocation;
 }
 
-async function locateSuggestion(s: AddressSuggestion, focus?: LatLng): Promise<Located> {
+async function locateSuggestion(s: LocatedSuggestion, focus?: LatLng): Promise<Located> {
   const corrected = await getCorrection(addressKey(s.address));
   if (corrected) return { geoStatus: 'ok', location: corrected, geoReason: undefined };
   if (focus && distanceMeters(focus, s.location) > AREA_RADIUS_METERS) {
@@ -41,11 +41,11 @@ async function locateSuggestion(s: AddressSuggestion, focus?: LatLng): Promise<L
   return { geoStatus: c.status, location: c.location, geoReason: c.reason };
 }
 
-export async function addStopFromSuggestion(routeId: string, s: AddressSuggestion): Promise<Stop> {
+export async function addStopFromSuggestion(routeId: string, s: LocatedSuggestion): Promise<Stop> {
   return newStop(routeId, s.address, await locateSuggestion(s, await routeFocus(routeId)));
 }
 
-export async function changeStopAddress(stopId: string, s: AddressSuggestion): Promise<void> {
+export async function changeStopAddress(stopId: string, s: LocatedSuggestion): Promise<void> {
   const stop = await getStop(stopId);
   if (stop) await putStop({ ...stop, address: s.address, ...(await locateSuggestion(s, await routeFocus(stop.routeId))) });
 }

@@ -9,7 +9,7 @@ export interface BackupFile {
   stopTypes: StopType[];
   corrections: Array<{ key: string; location: LatLng; label: string }>;
   unreadableCodes: string[];
-  settings: Omit<AppSettings, 'orsApiKey'>;
+  settings: Omit<AppSettings, 'orsApiKey' | 'googleApiKey'>;
 }
 
 const LISTS = ['routes', 'stops', 'stopTypes', 'corrections', 'unreadableCodes'] as const;

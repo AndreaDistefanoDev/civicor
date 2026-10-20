@@ -24,6 +24,14 @@ Civicor usa OpenRouteService (basato su OpenStreetMap) per trovare gli indirizzi
 La chiave resta solo sul telefono e non finisce nei backup. Il piano gratuito basta per un autista
 (circa 6 richieste di distanze per ottimizzare 130 fermate, su 500 al giorno).
 
+## Facoltativo: civici più precisi con Google
+
+OpenStreetMap conosce pochi numeri civici in alcune zone. Per la precisione di Google Maps:
+**Impostazioni → Ricerca indirizzi → Google** e incolla una chiave Google Maps Platform con
+**Places API (New)** e **Geocoding API** attive, limitata al sito di Civicor. Google offre 10.000 richieste
+gratuite al mese per ciascun servizio. Anche questa chiave resta solo sul telefono.
+Le distanze per ottimizzare il percorso continuano a usare OpenRouteService.
+
 ## Installare l'app sull'iPhone
 
 1. Apri l'indirizzo dell'app in **Safari**.

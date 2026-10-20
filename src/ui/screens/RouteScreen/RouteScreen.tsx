@@ -62,12 +62,14 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
   const [dialog, setDialog] = useState<Dialog>(null);
 
   // Riprende la ricerca delle posizioni rimaste in sospeso: all'apertura (es. dopo un ricaricamento)
-  // e ogni volta che cambia la chiave OpenRouteService.
+  // e ogni volta che cambiano le chiavi o il motore di ricerca indirizzi.
   const settingsLoaded = settings !== undefined;
   const orsKey = settings?.orsApiKey;
+  const googleKey = settings?.googleApiKey;
+  const provider = settings?.geocoderProvider;
   useEffect(() => {
     if (settingsLoaded) void geocodeQueue.enqueueRoute(props.routeId);
-  }, [props.routeId, orsKey, settingsLoaded]);
+  }, [props.routeId, orsKey, googleKey, provider, settingsLoaded]);
 
   if (!route || !stops) return null;
   const empty = stops.length === 0;

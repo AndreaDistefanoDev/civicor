@@ -118,3 +118,18 @@ it('usa la posizione GPS del telefono e mostra la distanza', async () => {
   expect(await screen.findByText('1,2 km')).toBeInTheDocument();
   vi.unstubAllGlobals();
 });
+
+it('con Google, scelto un suggerimento ne legge la posizione prima di aggiungerlo', async () => {
+  const google = { ...geocoder,
+    autocomplete: vi.fn(async () => [{ placeId: 'p1', label: 'Via Roma, 20, Ragusa', precision: 'house' as const,
+      address: { street: 'Via Roma, 20', city: 'Ragusa' } }]),
+    resolveSuggestion: vi.fn(async (s) => ({ ...s, location: { lat: 36.93, lng: 14.72 },
+      address: { street: 'Via Roma, 20', city: 'Ragusa', postcode: '97100' } })) };
+  render(<AddressSearch routeId="r1" geocoder={google} onClose={vi.fn()} onPickOnMap={vi.fn()} onPaste={vi.fn()} />);
+  await userEvent.type(screen.getByLabelText('Cerca indirizzo'), 'Via Roma 20');
+  await userEvent.click(await screen.findByRole('button', { name: /Via Roma, 20, Ragusa/ }));
+  await waitFor(async () => expect(await listStops('r1')).toHaveLength(1));
+  expect(google.resolveSuggestion).toHaveBeenCalledTimes(1);
+  expect((await listStops('r1'))[0]).toMatchObject({ location: { lat: 36.93, lng: 14.72 }, geoStatus: 'ok',
+    address: { street: 'Via Roma, 20', postcode: '97100' } });
+});

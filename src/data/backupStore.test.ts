@@ -16,11 +16,13 @@ it('backup: andata e ritorno senza chiave ORS', async () => {
     originalIndex: 0, displayId: 1, outcome: 'pending', createdAt: 1,
   });
   await saveCorrection('via esempio 12|97100', { lat: 1, lng: 2 }, 'Via Esempio, 12');
-  await saveSettings({ navApp: 'google', orsApiKey: 'segreta' });
+  await saveSettings({ navApp: 'google', orsApiKey: 'segreta', googleApiKey: 'segreta-google' });
   await saveUnreadableCode('codice strano');
 
   const file = await exportBackup();
   expect(file.settings).not.toHaveProperty('orsApiKey');
+  expect(file.settings).not.toHaveProperty('googleApiKey');
+  expect(JSON.stringify(file)).not.toContain('segreta');
   expect(file.unreadableCodes).toEqual(['codice strano']);
   const json = JSON.parse(JSON.stringify(file));
 

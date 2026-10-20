@@ -3,7 +3,7 @@ import { addStopFromSuggestion } from '../../../data/manualAdd';
 import { withTypedHouseNumber } from '../../../domain/address/houseNumber';
 import { createSpeechInput } from '../../../device/speech';
 import type { LatLng } from '../../../domain/types';
-import type { Geocoder } from '../../../services/geocoder';
+import { resolveSuggestion, type Geocoder } from '../../../services/geocoder';
 import { AddressAutocomplete } from '../../common/AddressAutocomplete';
 import { Screen } from '../../common/ui';
 import { useNearbyFocus } from '../../useNearbyFocus';
@@ -27,7 +27,8 @@ export function VoiceInput(props: { routeId: string; geocoder: Geocoder; focus?:
         setMessage(`Non trovato: "${text}"`);
         return;
       }
-      const stop = await addStopFromSuggestion(props.routeId, withTypedHouseNumber(first, text));
+      const located = await resolveSuggestion(props.geocoder, first);
+      const stop = await addStopFromSuggestion(props.routeId, withTypedHouseNumber(located, text) as typeof located);
       setHeard((h) => [stop.address.street, ...h]);
       setMessage(undefined);
     } catch (e) {
