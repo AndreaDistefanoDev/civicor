@@ -18,7 +18,8 @@ export class OrsError extends Error {
   }
 }
 
-export const ORS_BASE = 'https://api.openrouteservice.org';
+// api.openrouteservice.org viene spento a inizio novembre 2026: si usa api.heigit.org.
+export const ORS_BASE = 'https://api.heigit.org';
 
 export interface OrsRequest {
   apiKey?: string;

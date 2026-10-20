@@ -22,7 +22,8 @@ it('matrice: POST con [lng, lat], sorgenti, destinazioni e chiave in header', as
   const r = await createOrsRouting(async () => 'k').matrix(
     [{ lat: 1, lng: 2 }, { lat: 3, lng: 4 }], { sources: [0], destinations: [0, 1] }, 'driving-car');
   const [url, init] = fetchMock.mock.calls[0];
-  expect(new URL(url).pathname).toBe('/v2/matrix/driving-car');
+  expect(new URL(url).origin).toBe('https://api.heigit.org');
+  expect(new URL(url).pathname).toBe('/openrouteservice/v2/matrix/driving-car');
   expect(init.headers.Authorization).toBe('k');
   expect(JSON.parse(init.body)).toEqual({ locations: [[2, 1], [4, 3]], sources: [0], destinations: [0, 1],
     metrics: ['duration', 'distance'] });
@@ -47,7 +48,7 @@ it('linea del percorso: 60 tappe in 2 richieste, pedaggi evitati, coordinate con
   const line = await createOrsRouting(async () => 'k').routeLine(pts, 'driving-car', true);
   expect(fetchMock).toHaveBeenCalledTimes(2);
   const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-  expect(new URL(fetchMock.mock.calls[0][0]).pathname).toBe('/v2/directions/driving-car/geojson');
+  expect(new URL(fetchMock.mock.calls[0][0]).pathname).toBe('/openrouteservice/v2/directions/driving-car/geojson');
   expect(body.coordinates).toHaveLength(50);
   expect(body.options).toEqual({ avoid_features: ['tollways'] });
   expect(line).toEqual([[0, 0], [1, 1], [2, 2]]);

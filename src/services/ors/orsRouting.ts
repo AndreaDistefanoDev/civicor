@@ -8,7 +8,7 @@ const toLngLat = (p: LatLng): [number, number] => [p.lng, p.lat];
 export function createOrsRouting(getApiKey: () => Promise<string | undefined>): RoutingProvider {
   return {
     async matrix(locations, req, profile) {
-      const data = (await orsFetch(`/v2/matrix/${profile}`, {
+      const data = (await orsFetch(`/openrouteservice/v2/matrix/${profile}`, {
         apiKey: await getApiKey(),
         method: 'POST',
         body: {
@@ -25,7 +25,7 @@ export function createOrsRouting(getApiKey: () => Promise<string | undefined>): 
       const apiKey = await getApiKey();
       const line: [number, number][] = [];
       for (const chunk of planDirectionsChunks(points)) {
-        const data = (await orsFetch(`/v2/directions/${profile}/geojson`, {
+        const data = (await orsFetch(`/openrouteservice/v2/directions/${profile}/geojson`, {
           apiKey,
           method: 'POST',
           body: {

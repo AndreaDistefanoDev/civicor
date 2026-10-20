@@ -69,13 +69,13 @@ export function createOrsGeocoder(getApiKey: () => Promise<string | undefined>):
         ...focusParams(focus),
       };
       if (address.postcode) query.postalcode = address.postcode;
-      return search('/geocode/search/structured', query);
+      return search('/pelias/v1/search/structured', query);
     },
     geocodeText(text, focus) {
-      return search('/geocode/search', { text, 'boundary.country': 'IT', size: '3', ...focusParams(focus) });
+      return search('/pelias/v1/search', { text, 'boundary.country': 'IT', size: '3', ...focusParams(focus) });
     },
     async autocomplete(text, focus) {
-      const hits = await search('/geocode/autocomplete', { text, 'boundary.country': 'IT', ...focusParams(focus) });
+      const hits = await search('/pelias/v1/autocomplete', { text, 'boundary.country': 'IT', ...focusParams(focus) });
       return hits
         .filter((h): h is GeocodeHit & { address: Address } => !!h.address)
         .map<AddressSuggestion>((h) => ({ label: h.label, address: h.address, location: h.location, precision: h.precision }));

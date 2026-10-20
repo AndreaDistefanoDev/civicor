@@ -48,7 +48,8 @@ it('ricerca strutturata in Italia e precisione house da layer address', async ()
   fetchMock.mockReturnValue(json(200, { features: [feature('address', 14.73091, 36.92587)] }));
   const hits = await createOrsGeocoder(async () => 'k').geocode(address, { lat: 36.9, lng: 14.7 });
   const url = new URL(fetchMock.mock.calls[0][0]);
-  expect(url.pathname).toBe('/geocode/search/structured');
+  expect(url.origin).toBe('https://api.heigit.org');
+  expect(url.pathname).toBe('/pelias/v1/search/structured');
   expect(url.searchParams.get('country')).toBe('IT');
   expect(url.searchParams.get('address')).toBe('Via Esempio, 12');
   expect(url.searchParams.get('locality')).toBe('Ragusa');
@@ -65,13 +66,14 @@ it('mappa i layer di Pelias in precisioni', async () => {
     feature('street', 1, 2), feature('locality', 1, 2), feature('venue', 1, 2)] }));
   const hits = await createOrsGeocoder(async () => 'k').geocodeText('via esempio ragusa');
   expect(hits.map((h) => h.precision)).toEqual(['street', 'locality', 'unknown']);
+  expect(new URL(fetchMock.mock.calls[0][0]).pathname).toBe('/pelias/v1/search');
   expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get('boundary.country')).toBe('IT');
 });
 
 it('autocompletamento restituisce suggerimenti con indirizzo', async () => {
   fetchMock.mockReturnValue(json(200, { features: [feature('address', 14.73, 36.92)] }));
   const s = await createOrsGeocoder(async () => 'k').autocomplete('via esem');
-  expect(new URL(fetchMock.mock.calls[0][0]).pathname).toBe('/geocode/autocomplete');
+  expect(new URL(fetchMock.mock.calls[0][0]).pathname).toBe('/pelias/v1/autocomplete');
   expect(s[0]).toMatchObject({ label: 'Via Esempio 12, Ragusa, RG, Italia', precision: 'house',
     address: { street: 'Via Esempio, 12', city: 'Ragusa' } });
 });
