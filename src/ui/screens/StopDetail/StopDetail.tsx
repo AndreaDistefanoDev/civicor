@@ -3,6 +3,8 @@ import { useState, type ReactNode } from 'react';
 import { duplicateStop, removeStop, updateStop } from '../../../data/stopOps';
 import { getStop, listStopTypes } from '../../../data/repos';
 import { formatAddressCity, formatAddressLine } from '../../../domain/address/normalize';
+import { formatEuro, parseEuro } from '../../../domain/cod/cod';
+import { normalizePhone } from '../../../domain/contact/phone';
 import type { Stop, StopKind, StopOrder } from '../../../domain/types';
 import { ConfirmDialog, PickerSheet, Screen } from '../../common/ui';
 import { FindPackageSheet, describeFindPackage } from './FindPackageSheet';
@@ -107,6 +109,34 @@ export function StopDetail(props: {
         </div>
       )}
       {stop.recipient && <Row label="Destinatario" value={stop.recipient} />}
+      <div className="detail-fields">
+        <label className="field">
+          <span>Telefono</span>
+          <input
+            key={`phone-${stop.phone ?? ''}`}
+            type="tel"
+            inputMode="tel"
+            autoComplete="off"
+            placeholder="Es. 333 123 4567"
+            defaultValue={stop.phone ?? ''}
+            onBlur={(e) => save({ phone: normalizePhone(e.target.value) })}
+          />
+        </label>
+        <label className="field">
+          <span>Contrassegno (€)</span>
+          <input
+            key={`cod-${stop.cod?.amount ?? ''}`}
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="Nessuno"
+            defaultValue={stop.cod ? formatEuro(stop.cod.amount).replace(' €', '') : ''}
+            onBlur={(e) => {
+              const amount = parseEuro(e.target.value);
+              save({ cod: amount ? { amount, method: stop.cod?.method } : undefined });
+            }}
+          />
+        </label>
+      </div>
       {stop.trackingNumbers.length > 0 && (
         <Row label={stop.trackingNumbers.length > 1 ? 'Spedizioni' : 'Spedizione'}>
           <span className="value num tracking">

@@ -44,3 +44,9 @@
 .scan-status.ok { color: var(--ok); }
 .scan-status.warn { color: var(--warn); }
 .scan-hint { justify-content: center; border-bottom: 0 !important; padding-top: 40px !important; }
+
+/* Posizione nel furgone subito dopo la lettura */
+.scan-van { display: grid; gap: 6px; }
+.scan-van-title { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-sm); font-weight: 600; color: var(--muted); }
+.scan-van-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.scan-van-chips .chip { min-height: 44px; }

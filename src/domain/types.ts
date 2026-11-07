@@ -8,6 +8,9 @@ export type GeoStatus = 'pending' | 'ok' | 'uncertain' | 'failed';
 export type StopOrder = 'first' | 'auto' | 'last';
 export type StopKind = 'delivery' | 'pickup';
 export type StopOutcome = 'pending' | 'done' | 'failed';
+/** Perché una consegna non è riuscita (GLS: due tentativi, poi giacenza). */
+export type FailReason = 'not_home' | 'refused' | 'wrong_address' | 'no_access' | 'parcel_shop' | 'other';
+export type CodMethod = 'cash' | 'pos';
 export type PackageSize = 'small' | 'medium' | 'large' | 'box' | 'bag' | 'letter';
 export type VehiclePosition = 'front' | 'middle' | 'back' | 'left' | 'right' | 'floor' | 'shelf';
 /** Orari nel formato 'HH:mm'. */
@@ -37,6 +40,13 @@ export interface Stop {
   eta?: string;
   outcome: StopOutcome;
   outcomeAt?: number;
+  failReason?: FailReason;
+  /** Tentativo di consegna fallito: 1° o 2°. */
+  attempt?: 1 | 2;
+  /** Telefono del destinatario, solo cifre (es. 3331234567). */
+  phone?: string;
+  /** Contrassegno: importo da incassare e, a consegna fatta, come è stato pagato. */
+  cod?: { amount: number; method?: CodMethod };
   createdAt: number;
 }
 
@@ -91,6 +101,10 @@ export interface AppSettings {
   geocoderProvider: 'google' | 'osm';
   googleApiKey?: string;
   retentionMonths: number | null;
+  /** Tiene lo schermo acceso mentre il giro è aperto. */
+  keepAwake: boolean;
+  /** Ultima copia di sicurezza esportata (ms). */
+  lastBackupAt?: number;
   defaultRouteSettings?: RouteSettings;
 }
 

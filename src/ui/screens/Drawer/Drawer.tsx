@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { MoreVertical, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { deleteRoute, duplicateRoute, listRoutes, renameRoute } from '../../../data/repos';
 import type { Route } from '../../../domain/types';
@@ -36,8 +37,8 @@ export function Drawer(props: DrawerProps) {
       <nav className="drawer" aria-label="Percorsi">
         <div className="drawer-head">
           <span className="drawer-brand">Civicor</span>
-          <button className="link-btn" onClick={props.onOpenSettings}>
-            Impostazioni
+          <button className="icon-btn" aria-label="Impostazioni" onClick={props.onOpenSettings}>
+            <Settings size={20} aria-hidden="true" />
           </button>
         </div>
         <div className="drawer-list">
@@ -57,7 +58,7 @@ export function Drawer(props: DrawerProps) {
                       aria-label={`Altre azioni per ${r.name}`}
                       onClick={(e) => setMenuFor({ route: r, top: (e.currentTarget as HTMLElement).getBoundingClientRect().bottom })}
                     >
-                      ⋮
+                      <MoreVertical size={20} aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -66,7 +67,8 @@ export function Drawer(props: DrawerProps) {
         </div>
         <div className="drawer-foot">
           <button className="btn-primary" onClick={props.onCreateRoute}>
-            + Crea percorso
+            <Plus size={20} aria-hidden="true" />
+            Crea percorso
           </button>
         </div>
       </nav>

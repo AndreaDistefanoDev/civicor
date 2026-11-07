@@ -1,4 +1,5 @@
 import { addressKey } from '../address/normalize';
+import { extractPhone } from '../contact/phone';
 import type { GlsLabel, Stop } from '../types';
 
 export interface ScanContext {
@@ -45,6 +46,7 @@ export function applyScan(stops: Stop[], label: GlsLabel, ctx: ScanContext): Sca
       address,
       recipient: label.recipient || undefined,
       senderNotes: label.notes,
+      phone: extractPhone(label.notes),
       trackingNumbers: [label.trackingNumber],
       packages: 1,
       order: 'auto',

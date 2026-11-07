@@ -2,15 +2,17 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { listStops, saveUnreadableCode } from '../../../data/repos';
 import { recordScan } from '../../../data/scanStore';
+import { updateStop } from '../../../data/stopOps';
 import { CameraError, openCamera, type CameraHandle } from '../../../device/camera';
 import { playDuplicate, playError, playSuccess, unlockAudio } from '../../../device/feedback';
 import { createScanner, decodeInWorker } from '../../../device/scanner';
 import { formatAddressCity, formatAddressLine } from '../../../domain/address/normalize';
 import { parseGlsDataMatrix } from '../../../domain/gls/parseGlsDataMatrix';
-import type { Stop } from '../../../domain/types';
+import type { Stop, VehiclePosition } from '../../../domain/types';
 import { geocodeQueue } from '../../appServices';
 import { GeocodeStatusBar } from '../../common/GeocodeStatus';
 import { CloseIcon } from '../../common/ui';
+import { POSITION_LABELS } from '../StopDetail/FindPackageSheet';
 import { initialScanState, scanReducer } from './scanReducer';
 import './ScanScreen.css';
 
@@ -31,6 +33,31 @@ function frameReader(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
     ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
     return ctx.getImageData(0, 0, size, size);
   };
+}
+
+/** Le posizioni più usate mentre si carica: un tocco dopo ogni lettura. */
+const QUICK_POSITIONS: VehiclePosition[] = ['front', 'middle', 'back', 'left', 'right', 'shelf'];
+
+function VanPositionPicker(props: { stop: Stop }) {
+  const current = props.stop.findPackage?.positions ?? [];
+  const toggle = (p: VehiclePosition) => {
+    const positions = current.includes(p) ? current.filter((x) => x !== p) : [...current, p];
+    void updateStop(props.stop.id, { findPackage: { ...props.stop.findPackage, positions } });
+  };
+  return (
+    <div className="scan-van" role="group" aria-label="Dove lo metti nel furgone?">
+      <span className="scan-van-title">
+        Dove lo metti? <span className="plate">{props.stop.displayId}</span>
+      </span>
+      <div className="scan-van-chips">
+        {QUICK_POSITIONS.map((p) => (
+          <button key={p} className="chip" aria-pressed={current.includes(p)} onClick={() => toggle(p)}>
+            {POSITION_LABELS[p]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function statusIcon(s?: Stop) {
@@ -153,6 +180,7 @@ export function ScanScreen(props: {
 
       <div className="scan-panel">
         <GeocodeStatusBar onOpenSettings={props.onOpenSettings ?? props.onClose} />
+        {recent[0] && <VanPositionPicker stop={recent[0]} />}
         <div className="scan-counts">
           <span className="scan-count num">{count}</span>
           {uncertain > 0 && <span className="scan-uncertain">{uncertain} da verificare</span>}

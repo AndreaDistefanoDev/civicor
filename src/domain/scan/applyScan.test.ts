@@ -43,3 +43,9 @@ it('stesso indirizzo, spedizione diversa → un pacco in più sulla stessa ferma
     stop: { id: first.id, packages: 2, trackingNumbers: ['ZZ123456789010RG', 'ZZ999999999010RG'] },
   });
 });
+
+it('il telefono scritto nelle note dell\'etichetta viene salvato sulla fermata', () => {
+  const stop = added([], { ...label, trackingNumber: 'ZZ999999999010RG', notes: 'CHIAMARE PRIMA TEL 333 1234567' });
+  expect(stop.phone).toBe('3331234567');
+  expect(added([], { ...label, trackingNumber: 'ZZ888888888010RG' }).phone).toBeUndefined();
+});

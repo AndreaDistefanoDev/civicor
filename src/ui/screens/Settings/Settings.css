@@ -1,11 +1,23 @@
 .row-select {
-  max-width: 55%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
-  padding: 8px 10px; color: var(--text);
+  flex: none; width: 46%; min-height: 40px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 0 10px; color: var(--text); font-weight: 600; text-overflow: ellipsis;
 }
-.row-switch { width: 46px; height: 26px; accent-color: var(--accent); }
-.settings-message { margin: 0 16px 8px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
-.settings-hint { padding: 0 16px 14px; margin: 0; font-size: 15px; }
-.settings-hint a { color: var(--accent); }
+.row-select:focus { outline: none; border-color: var(--accent); }
+/* Interruttore stile iPhone sopra un checkbox vero (resta accessibile) */
+.row-switch {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 52px; height: 32px; margin: 0;
+  border-radius: 16px; background: var(--surface-3); border: 1px solid var(--line); cursor: pointer;
+  transition: background var(--dur-move) ease;
+}
+.row-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; box-shadow: var(--shadow-1); transition: transform var(--dur-move) var(--ease-out);
+}
+.row-switch:checked { background: var(--accent); border-color: var(--accent); }
+.row-switch:checked::after { transform: translateX(20px); }
+.settings-message { margin: 0 var(--s-4) var(--s-2); padding: 10px var(--s-3); border-radius: var(--r-md); background: var(--surface-2); }
+.settings-hint { padding: 0 var(--s-4) 14px; margin: 0; font-size: var(--t-sm); color: var(--muted); }
+.settings-hint a { color: var(--accent-text); }
 .ors-field { padding-top: 12px; }
 .file-row input[type='file'] { max-width: 50%; color: var(--muted); font-size: 14px; }
 .settings-version { text-align: center; padding: 24px 0 32px; }

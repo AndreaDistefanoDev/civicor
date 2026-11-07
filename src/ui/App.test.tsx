@@ -16,7 +16,7 @@ beforeEach(async () => {
 it('senza percorsi di oggi invita a crearne uno', async () => {
   render(<App />);
   expect(await screen.findByText('Nessun percorso per oggi')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: '+ Crea percorso' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Crea percorso' }));
   expect(screen.getByRole('dialog', { name: 'Crea percorso' })).toBeInTheDocument();
 });
 
@@ -31,7 +31,7 @@ it('apre il percorso di oggi con lo stato vuoto', async () => {
   render(<App />);
   expect(await screen.findByText('Giro di prova')).toBeInTheDocument();
   expect(screen.getByText('Aggiungi le prime fermate e inizia a creare un percorso')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: '+ Aggiungi fermata' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Aggiungi fermata' })).toBeInTheDocument();
 });
 
 it('il menu apre il drawer con i percorsi', async () => {

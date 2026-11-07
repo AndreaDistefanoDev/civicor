@@ -6,3 +6,5 @@ riferimenti/
 *.HEIC
 .env*
 coverage/
+research_notes/
+reports/

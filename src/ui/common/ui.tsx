@@ -1,12 +1,9 @@
+import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import './common.css';
 
 export function CloseIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-    </svg>
-  );
+  return <X size={20} aria-hidden="true" />;
 }
 
 /** Schermata a tutto schermo con titolo e chiusura. */

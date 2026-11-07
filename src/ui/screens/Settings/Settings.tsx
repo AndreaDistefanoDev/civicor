@@ -1,12 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState, type ReactNode } from 'react';
-import { exportBackup, importBackup } from '../../../data/backupStore';
+import { importBackup } from '../../../data/backupStore';
 import { getSettings, saveSettings } from '../../../data/repos';
 import { validateBackup } from '../../../domain/backup/backup';
+import { lastBackupLabel } from '../../../domain/backup/lastBackup';
 import type { AppSettings } from '../../../domain/types';
 import { formatService } from '../StopDetail/StopDetail';
 import { Screen } from '../../common/ui';
-import { todayIso } from '../../dates';
+import { downloadBackup } from '../../backupDownload';
 import './Settings.css';
 
 const VERSION = '0.1.0';
@@ -43,17 +44,6 @@ export function Settings(props: { onClose: () => void }) {
   const [message, setMessage] = useState<string>();
   if (!settings) return null;
   const save = (patch: Partial<AppSettings>) => void saveSettings(patch);
-
-  const doExport = async () => {
-    const file = await exportBackup();
-    const blob = new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `civicor-backup-${todayIso()}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
 
   const doImport = async (f?: File) => {
     if (!f) return;
@@ -93,6 +83,13 @@ export function Settings(props: { onClose: () => void }) {
             Evita pedaggi
           </label>
           <input id="set-tolls" type="checkbox" role="switch" className="row-switch" checked={settings.avoidTolls} onChange={(e) => save({ avoidTolls: e.target.checked })} />
+        </div>
+        <div className="row">
+          <label className="grow" htmlFor="set-awake">
+            <span className="row-title">Schermo sempre acceso</span>
+            <span className="row-sub">Durante il giro, per non sbloccare il telefono a ogni fermata</span>
+          </label>
+          <input id="set-awake" type="checkbox" role="switch" className="row-switch" checked={settings.keepAwake} onChange={(e) => save({ keepAwake: e.target.checked })} />
         </div>
         <SelectRow
           label="ID fermata"
@@ -154,8 +151,11 @@ export function Settings(props: { onClose: () => void }) {
       </Section>
 
       <Section title="Dati">
-        <button className="row" onClick={doExport}>
-          Esporta backup
+        <button className="row" onClick={() => void downloadBackup()}>
+          <span className="grow">
+            <span className="row-title">Esporta backup</span>
+            <span className="row-sub">Ultima copia: {lastBackupLabel(settings.lastBackupAt, Date.now())}</span>
+          </span>
         </button>
         <label className="row file-row">
           <span className="grow">Importa backup</span>

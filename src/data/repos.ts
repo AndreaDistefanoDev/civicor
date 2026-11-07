@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   retentionMonths: 12,
   geocoderProvider: 'osm',
+  keepAwake: true,
 };
 
 const DEFAULT_ROUTE_SETTINGS: RouteSettings = { start: { mode: 'current' }, startTime: 'now', end: { mode: 'return' } };

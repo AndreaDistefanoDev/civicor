@@ -1,11 +1,14 @@
+import { AlertTriangle, Check, Clock, Package, X } from 'lucide-react';
 import { formatAddressCity, formatAddressLine } from '../../../domain/address/normalize';
 import type { Stop } from '../../../domain/types';
+import { failReasonLabel } from './StopCard';
 
-function statusMark(s: Stop) {
-  if (s.outcome === 'done') return <span className="mark ok" aria-label="Effettuata">✓</span>;
-  if (s.outcome === 'failed') return <span className="mark danger" aria-label="Non riuscita">✕</span>;
-  if (s.geoStatus === 'uncertain' || s.geoStatus === 'failed') return <span className="mark warn" aria-label="Da verificare">▲</span>;
-  if (s.geoStatus === 'pending') return <span className="mark muted" aria-label="In ricerca">…</span>;
+function status(s: Stop) {
+  if (s.outcome === 'done') return <Check size={18} className="st ok" aria-label="Effettuata" />;
+  if (s.outcome === 'failed') return <X size={18} className="st danger" aria-label="Non riuscita" />;
+  if (s.geoStatus === 'uncertain' || s.geoStatus === 'failed')
+    return <AlertTriangle size={18} className="st warn" aria-label="Da verificare" />;
+  if (s.geoStatus === 'pending') return <Clock size={18} className="st muted" aria-label="In ricerca" />;
   return null;
 }
 
@@ -14,22 +17,34 @@ export function StopList(props: { stops: Stop[]; onOpen: (id: string) => void })
   const sorted = [...props.stops].sort((a, b) => (a.sequence ?? a.originalIndex) - (b.sequence ?? b.originalIndex));
   return (
     <ol className="stop-list">
-      {sorted.map((s) => (
-        <li key={s.id}>
-          <button className="stop-row" onClick={() => props.onOpen(s.id)}>
-            <span className="stop-row-num num">{s.eta ?? String(s.displayId).padStart(2, '0')}</span>
-            <span className="grow">
-              <span className="stop-row-line">{formatAddressLine(s.address)}</span>
-              <span className="stop-row-city muted">
-                {formatAddressCity(s.address)}
-                {s.packages > 1 ? ` · ${s.packages} pacchi` : ''}
+      {sorted.map((s) => {
+        const closed = s.outcome !== 'pending';
+        const uncertain = !closed && (s.geoStatus === 'uncertain' || s.geoStatus === 'failed');
+        return (
+          <li key={s.id}>
+            <button className={`stop-row${closed ? ' closed' : ''}`} onClick={() => props.onOpen(s.id)}>
+              <span className={`plate${closed ? ' done' : uncertain ? ' warn' : ''}`} aria-label={`ID ${s.displayId}`}>
+                {s.displayId}
               </span>
-            </span>
-            {statusMark(s)}
-            <span className="id-badge num">ID {s.displayId}</span>
-          </button>
-        </li>
-      ))}
+              <span className="grow">
+                <span className="stop-row-line">{formatAddressLine(s.address)}</span>
+                <span className="stop-row-city">
+                  {s.outcome === 'failed' && s.failReason ? failReasonLabel(s.failReason) : formatAddressCity(s.address)}
+                  {s.packages > 1 && (
+                    <span className="stop-row-pkgs">
+                      <Package size={13} aria-hidden="true" /> {s.packages}
+                    </span>
+                  )}
+                </span>
+              </span>
+              <span className="stop-row-end">
+                {s.eta && <span className="stop-row-eta num">{s.eta}</span>}
+                {status(s)}
+              </span>
+            </button>
+          </li>
+        );
+      })}
     </ol>
   );
 }

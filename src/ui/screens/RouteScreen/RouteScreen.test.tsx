@@ -37,7 +37,10 @@ it('percorso ottimizzato: riepilogo, Perfeziona e Conferma il percorso', async (
   await db.routes.update(route.id, { status: 'optimized', totals: { km: 63.7, minutes: 90, endTime: '23:57' } });
   await putStop(makeStop({ id: 'a', routeId: route.id, sequence: 0, eta: '22:28' }));
   renderScreen(route.id);
-  expect(await screen.findByText('Termine: 23:57 · 1 fermate · 63,7 km')).toBeInTheDocument();
+  const summary = await screen.findByRole('group', { name: 'Riepilogo del percorso' });
+  expect(summary).toHaveTextContent('Fine giro23:57');
+  expect(summary).toHaveTextContent('Fermate1');
+  expect(summary).toHaveTextContent('Km63,7');
   expect(screen.getByText('Nessuna sosta')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Perfeziona' })).toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Conferma il percorso' }));

@@ -36,6 +36,6 @@ it('Elimina chiede conferma prima di cancellare', async () => {
 
 it('+ Crea percorso chiama onCreateRoute', async () => {
   render(<Drawer {...props} />);
-  await userEvent.click(screen.getByRole('button', { name: '+ Crea percorso' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Crea percorso' }));
   expect(props.onCreateRoute).toHaveBeenCalled();
 });

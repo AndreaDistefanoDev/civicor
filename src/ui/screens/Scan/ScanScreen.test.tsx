@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ScanScreen } from './ScanScreen';
 import { db } from '../../../data/db';
@@ -101,4 +101,15 @@ it('"Fine" passa il percorso a onDone', async () => {
   render(<ScanScreen routeId={routeId} onDone={onDone} onManualAdd={vi.fn()} onClose={vi.fn()} />);
   await userEvent.click(await screen.findByRole('button', { name: 'Fine (0 fermate)' }));
   expect(onDone).toHaveBeenCalledWith(routeId);
+});
+
+it('dopo la lettura si sceglie con un tocco dove va il pacco nel furgone', async () => {
+  render(<ScanScreen routeId={routeId} onDone={vi.fn()} onManualAdd={vi.fn()} onClose={vi.fn()} />);
+  await waitFor(() => expect(scanner.onPayload).toBeDefined());
+  await act(async () => scanner.onPayload!(buildGlsPayload(label)));
+  const group = await screen.findByRole('group', { name: 'Dove lo metti nel furgone?' });
+  await userEvent.click(within(group).getByRole('button', { name: 'Dietro' }));
+  await userEvent.click(within(group).getByRole('button', { name: 'Sinistra' }));
+  await waitFor(async () => expect((await listStops(routeId))[0].findPackage?.positions).toEqual(['back', 'left']));
+  expect(within(group).getByRole('button', { name: 'Dietro' })).toHaveAttribute('aria-pressed', 'true');
 });

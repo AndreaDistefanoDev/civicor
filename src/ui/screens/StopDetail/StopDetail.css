@@ -28,3 +28,6 @@
 .window-row .field:last-child { padding-left: 6px; }
 .add-window { margin: 0 16px; }
 .add-next { padding: 0 16px 12px; }
+.detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding-top: var(--s-3); }
+.detail-fields .field { padding-right: var(--s-2); }
+.detail-fields .field + .field { padding-left: var(--s-2); padding-right: var(--s-4); }

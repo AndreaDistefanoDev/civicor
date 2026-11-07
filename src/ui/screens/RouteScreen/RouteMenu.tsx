@@ -1,3 +1,4 @@
+import { MoreVertical } from 'lucide-react';
 import { useState } from 'react';
 import type { RouteStatus } from '../../../domain/types';
 import { Menu } from '../../common/ui';
@@ -29,7 +30,7 @@ export function RouteMenu(props: {
         aria-label="Altre azioni del percorso"
         onClick={(e) => setOpen((e.currentTarget as HTMLElement).getBoundingClientRect().bottom + 4)}
       >
-        ⋮
+        <MoreVertical size={20} aria-hidden="true" />
       </button>
       {open !== undefined && <Menu top={open} items={items} onClose={() => setOpen(undefined)} />}
     </>

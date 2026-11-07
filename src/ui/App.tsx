@@ -5,6 +5,7 @@ import '@fontsource/barlow-condensed/600.css';
 import '@fontsource/barlow-condensed/700.css';
 import './theme.css';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { FolderOpen, Plus, Settings as SettingsIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSettings, listRoutes, requestPersistentStorage } from '../data/repos';
 import { Toast } from './common/Toast';
@@ -91,17 +92,25 @@ export default function App() {
       ) : (
         routes && (
           <main className="welcome">
+            <div className="welcome-mark" aria-hidden="true">
+              <span className="plate lg">1</span>
+              <span className="plate lg">2</span>
+              <span className="plate lg">3</span>
+            </div>
             <h1 className="welcome-brand">Civicor</h1>
             <p className="welcome-text">Nessun percorso per oggi</p>
             <button className="btn-primary" onClick={() => openScreen('createRoute')}>
-              + Crea percorso
+              <Plus size={20} aria-hidden="true" />
+              Crea percorso
             </button>
             {routes.length > 0 && (
               <button className="btn-secondary" onClick={() => openScreen('drawer')}>
+                <FolderOpen size={20} aria-hidden="true" />
                 Apri un percorso esistente
               </button>
             )}
-            <button className="link-btn welcome-settings" onClick={() => openScreen('settings')}>
+            <button className="btn-ghost welcome-settings" onClick={() => openScreen('settings')}>
+              <SettingsIcon size={18} aria-hidden="true" />
               Impostazioni
             </button>
           </main>

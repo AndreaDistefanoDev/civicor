@@ -1,8 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { ChevronRight, Coffee, Flag, House, Menu, Plus, ScanLine, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { optimizeRoute, resetDisplayIds, reverseRoute, skipOptimization, type OptimizeStep } from '../../../data/optimizeRoute';
 import { deleteStops, getRoute, getSettings, listStops, listStopTypes, updateRoute } from '../../../data/repos';
 import { unlockAudio } from '../../../device/feedback';
+import { useWakeLock } from '../../../device/wakeLock';
 import type { Route } from '../../../domain/types';
 import { geocodeQueue, optimizeDeps } from '../../appServices';
 import { GeocodeStatusBar } from '../../common/GeocodeStatus';
@@ -37,17 +39,38 @@ function breakText(r: Route) {
     : { title: 'Nessuna sosta', sub: 'Tocca per pianificare una sosta' };
 }
 
-function SettingRow(props: { title: string; sub: string; onClick: () => void; icon: string }) {
+function SettingRow(props: { title: string; sub: string; onClick: () => void; icon: LucideIcon }) {
+  const Icon = props.icon;
   return (
-    <button className="setting-row" onClick={props.onClick}>
-      <span className="setting-icon" aria-hidden="true">
-        {props.icon}
+    <button className="row" onClick={props.onClick}>
+      <span className="row-icon" aria-hidden="true">
+        <Icon size={18} />
       </span>
       <span className="grow">
-        <span className="setting-title">{props.title}</span>
-        <span className="setting-sub muted">{props.sub}</span>
+        <span className="row-title">{props.title}</span>
+        <span className="row-sub">{props.sub}</span>
       </span>
+      <ChevronRight size={18} className="chev" aria-hidden="true" />
     </button>
+  );
+}
+
+/** Tre valori grandi: quando finisci, quante fermate, quanti km. */
+function RouteSummary(props: { endTime?: string; stops: number; km?: number }) {
+  const items: Array<[string, string]> = [
+    ['Fine giro', props.endTime ?? '—'],
+    ['Fermate', String(props.stops)],
+    ['Km', props.km !== undefined ? String(props.km).replace('.', ',') : '—'],
+  ];
+  return (
+    <div className="route-summary" role="group" aria-label="Riepilogo del percorso">
+      {items.map(([label, value]) => (
+        <div key={label} className="route-summary-item">
+          <span className="route-summary-label">{label}</span>
+          <span className="route-summary-value num">{value}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -70,6 +93,8 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
   useEffect(() => {
     if (settingsLoaded) void geocodeQueue.enqueueRoute(props.routeId);
   }, [props.routeId, orsKey, googleKey, provider, settingsLoaded]);
+  // Durante il giro lo schermo resta acceso: niente sblocchi a ogni fermata.
+  useWakeLock(!!settings?.keepAwake && route?.status === 'in_progress');
 
   if (!route || !stops) return null;
   const empty = stops.length === 0;
@@ -92,9 +117,13 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
     app.openScreen('scan', { routeId: route.id });
   };
 
-  const meta = route.totals
-    ? `Termine: ${route.totals.endTime} · ${stops.length} fermate · ${String(route.totals.km).replace('.', ',')} km`
-    : `${stops.length} fermate`;
+  const statusLabel: Record<Route['status'], string> = {
+    planning: 'Da ottimizzare',
+    optimized: 'Ottimizzato',
+    confirmed: 'Pronto a partire',
+    in_progress: 'In corso',
+    completed: 'Completato',
+  };
 
   return (
     <div className="route-screen">
@@ -106,10 +135,8 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
         bottomInset={sheetHeight(app.sheet)}
         onSelectStop={openStop}
       />
-      <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => app.openScreen('drawer')}>
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+      <button className="icon-btn floating menu-btn" aria-label="Menu" onClick={() => app.openScreen('drawer')}>
+        <Menu size={20} aria-hidden="true" />
       </button>
       <BottomSheet snap={app.sheet} onSnapChange={app.setSheet}>
         <SearchBar
@@ -119,8 +146,12 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
         />
         <div className="route-head">
           <div className="grow">
-            {!empty && <div className="route-meta muted">{meta}</div>}
             <h2 className="route-name">{route.name}</h2>
+            {!empty && (
+              <span className={`pill ${route.status === 'in_progress' ? 'accent' : route.status === 'completed' ? 'ok' : ''}`}>
+                {statusLabel[route.status]}
+              </span>
+            )}
           </div>
           {!empty && (
             <RouteMenu
@@ -152,20 +183,25 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
         {empty && (
           <div className="route-empty">
             <p>Aggiungi le prime fermate e inizia a creare un percorso</p>
-            <button className="btn-primary" onClick={() => app.openScreen('search', { routeId: route.id })}>
-              + Aggiungi fermata
-            </button>
-            <button className="btn-secondary" onClick={scan}>
+            <button className="btn-primary" onClick={scan}>
+              <ScanLine size={20} aria-hidden="true" />
               Scansiona etichette
+            </button>
+            <button className="btn-secondary" onClick={() => app.openScreen('search', { routeId: route.id })}>
+              <Plus size={20} aria-hidden="true" />
+              Aggiungi fermata
             </button>
           </div>
         )}
 
         {!empty && route.status === 'planning' && (
           <>
+            <RouteSummary stops={stops.length} />
             <div className="section-title">Impostazione percorso</div>
-            <SettingRow icon="⌂" {...startText(route)} onClick={openDetails} />
-            <SettingRow icon="⚑" {...endText(route)} onClick={openDetails} />
+            <div className="card">
+              <SettingRow icon={House} {...startText(route)} onClick={openDetails} />
+              <SettingRow icon={Flag} {...endText(route)} onClick={openDetails} />
+            </div>
             <div className="section-title">Fermate</div>
             <StopList stops={stops} onOpen={openStop} />
             <div className="sheet-actions">
@@ -178,10 +214,16 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
 
         {!empty && route.status === 'optimized' && (
           <>
-            <SettingRow icon="☕" {...breakText(route)} onClick={openDetails} />
-            <SettingRow icon="⌂" title="Posizione iniziale" sub={startText(route).sub} onClick={openDetails} />
+            <RouteSummary endTime={route.totals?.endTime} stops={stops.length} km={route.totals?.km} />
+            <div className="card route-settings-card">
+              <SettingRow icon={Coffee} {...breakText(route)} onClick={openDetails} />
+              <SettingRow icon={House} title="Posizione iniziale" sub={startText(route).sub} onClick={openDetails} />
+            </div>
+            <div className="section-title">Ordine delle fermate</div>
             <StopList stops={stops} onOpen={openStop} />
-            <SettingRow icon="⚑" {...endText(route)} onClick={openDetails} />
+            <div className="card route-settings-card">
+              <SettingRow icon={Flag} {...endText(route)} onClick={openDetails} />
+            </div>
             <div className="sheet-actions two">
               <button className="btn-secondary" onClick={() => setDialog('refine')}>
                 Perfeziona
@@ -203,8 +245,8 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
         <PickerSheet title="Perfeziona il percorso" onCancel={() => setDialog(null)} onDone={() => setDialog(null)}>
           <button className="row" onClick={() => setDialog('invert')}>
             <span className="grow">
-              <span className="setting-title">Inverti il percorso</span>
-              <span className="setting-sub muted">Inverti la direzione del percorso</span>
+              <span className="row-title">Inverti il percorso</span>
+              <span className="row-sub">Inverti la direzione del percorso</span>
             </span>
           </button>
         </PickerSheet>
