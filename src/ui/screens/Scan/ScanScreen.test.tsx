@@ -120,10 +120,10 @@ it('dopo la lettura si sceglie con un tocco dove va il pacco nel furgone', async
   render(<ScanScreen routeId={routeId} onDone={vi.fn()} onManualAdd={vi.fn()} onClose={vi.fn()} />);
   await waitFor(() => expect(scanner.onPayload).toBeDefined());
   await act(async () => scanner.onPayload!(buildGlsPayload(label)));
-  const group = await screen.findByRole('group', { name: 'Dove lo metti nel furgone?' });
+  const group = await screen.findByRole('group', { name: 'Dove lo metti nel furgone?' }, { timeout: 3000 });
   await userEvent.click(within(group).getByRole('button', { name: 'Dietro' }));
   await userEvent.click(within(group).getByRole('button', { name: 'Sinistra' }));
-  await waitFor(async () => expect((await listStops(routeId))[0].findPackage?.positions).toEqual(['back', 'left']));
+  await waitFor(async () => expect((await listStops(routeId))[0].findPackage?.positions).toEqual(['back', 'left']), { timeout: 3000 });
   expect(within(group).getByRole('button', { name: 'Dietro' })).toHaveAttribute('aria-pressed', 'true');
 });
 

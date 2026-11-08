@@ -41,7 +41,9 @@ export function GoogleMap(props: MapImplProps & { apiKey: string; onAuthFailure:
         tilt: latest.current.mode === '3d' ? 45 : 0,
       });
       const m = map.current;
-      m.addListener('zoom_changed', () => container.current?.classList.toggle('show-labels', (m.getZoom() ?? 0) >= LABELS_ZOOM));
+      const labels = () => container.current?.classList.toggle('show-labels', (m.getZoom() ?? 0) >= LABELS_ZOOM);
+      m.addListener('zoom_changed', labels);
+      labels();
       AdvancedMarker.current = AdvancedMarkerElement;
       setReady(true);
     })().catch(onFail);

@@ -27,8 +27,8 @@ export interface MapImplProps extends MapViewProps {
 }
 
 export const RAGUSA = { lat: 36.9258, lng: 14.7306 };
-/** Da questo zoom in su si vedono le etichette accanto ai segnaposti. */
-export const LABELS_ZOOM = 14.5;
+/** Le etichette (via e orario) compaiono solo da questo zoom in su, quando c'è spazio e non si sovrappongono. */
+export const LABELS_ZOOM = 15;
 
 /** Bandierina con l'orario di fine giro. */
 export function FinishTime(props: { time?: string }) {
