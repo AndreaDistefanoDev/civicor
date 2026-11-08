@@ -52,7 +52,7 @@ const pending = new Map<number, (text: string | null) => void>();
 /** Decodifica un fotogramma nel worker dedicato (WebAssembly fuori dal thread dell'interfaccia). */
 export function decodeInWorker(img: ImageData): Promise<string | null> {
   if (typeof Worker === 'undefined') {
-    return import('./zxing').then((m) => m.decodeDataMatrix(img));
+    return import('./zxing').then((m) => m.decodeLabelCodes(img));
   }
   if (!worker) {
     worker = new Worker(new URL('./scanWorker.ts', import.meta.url), { type: 'module' });

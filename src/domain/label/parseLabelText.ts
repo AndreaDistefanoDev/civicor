@@ -28,7 +28,7 @@ const PROVINCE = /^\(?([A-Z]{2})\)?$/;
 const SMALL_WORDS = new Set(['di', 'del', 'della', 'dello', 'dei', 'delle', 'degli', 'da', 'de', 'la', 'le', 'lo', 'il', 'e']);
 
 /** "VIA DEL MAGAZZINO 45/b" → "Via del Magazzino 45/B"; "c.da bosco" → "C.da Bosco". */
-function tidy(text: string): string {
+export function tidy(text: string): string {
   return text
     .trim()
     .replace(/[,;]+$/, '')

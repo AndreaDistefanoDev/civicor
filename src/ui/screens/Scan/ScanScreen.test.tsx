@@ -190,3 +190,32 @@ it('toccando l\'immagine della fotocamera legge subito l\'indirizzo inquadrato',
   expect(await screen.findByRole('group', { name: 'Indirizzo letto' })).toBeInTheDocument();
   expect(screen.getByText('Punta la fotocamera su un indirizzo o tocca per selezionarlo')).toBeInTheDocument();
 });
+
+it('quadratino con la sbarretta (altri mittenti): la fermata si aggiunge subito con via, civico e città', async () => {
+  render(<ScanScreen routeId={routeId} onDone={vi.fn()} onManualAdd={vi.fn()} onClose={vi.fn()} />);
+  await waitFor(() => expect(scanner.onPayload).toBeDefined());
+  await act(async () => scanner.onPayload!('A|mario rossi|via etna|catania|12||ORDINE: X1234567|'));
+  await waitFor(async () => expect(await listStops(routeId)).toHaveLength(1));
+  const [stop] = await listStops(routeId);
+  expect(stop).toMatchObject({ recipient: 'Mario Rossi', address: { street: 'Via Etna, 12', city: 'Catania' }, geoStatus: 'pending' });
+  expect(queue.enqueue).toHaveBeenCalledWith(stop.id);
+});
+
+it('numero di spedizione già nel giro (QR o codice a barre): "Già scansionata" e nessuna scheda', async () => {
+  await putStop(makeStop({ id: 'x', routeId, trackingNumbers: ['AB123456789IT'] }));
+  render(<ScanScreen routeId={routeId} onDone={vi.fn()} onManualAdd={vi.fn()} onClose={vi.fn()} />);
+  await waitFor(() => expect(scanner.onPayload).toBeDefined());
+  await act(async () => scanner.onPayload!('AB123456789IT'));
+  expect(await screen.findByText('Già scansionata')).toBeInTheDocument();
+  expect(await listStops(routeId)).toHaveLength(1);
+});
+
+it('il numero di spedizione letto prima della scheda viene salvato sulla fermata aggiunta', async () => {
+  ocr.text = PRINTED;
+  render(<ScanScreen routeId={routeId} onDone={vi.fn()} onManualAdd={vi.fn()} onClose={vi.fn()} />);
+  await waitFor(() => expect(scanner.onPayload).toBeDefined());
+  await act(async () => scanner.onPayload!('AB123456789IT'));
+  const card = await screen.findByRole('group', { name: 'Indirizzo letto' }, { timeout: 3000 });
+  await userEvent.click(within(card).getByRole('button', { name: 'Aggiungi' }));
+  await waitFor(async () => expect((await listStops(routeId))[0]?.trackingNumbers).toEqual(['AB123456789IT']));
+});

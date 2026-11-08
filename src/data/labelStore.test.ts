@@ -29,3 +29,12 @@ it('stesso indirizzo nello stesso giro: un pacco in più sulla stessa fermata', 
   expect(stops[0].packages).toBe(2);
   expect(stops[0].phone).toBe('3331234567');
 });
+
+it('con il numero di spedizione: lo salva sulla fermata e non aggiunge due volte lo stesso pacco', async () => {
+  const r = await createRoute({ date: '2026-11-07' });
+  const first = await addLabelStop(r.id, label, 'AB123456789IT');
+  expect(first.stop.trackingNumbers).toEqual(['AB123456789IT']);
+  const again = await addLabelStop(r.id, { ...label, street: 'Via Altra, 5' }, 'AB123456789IT');
+  expect(again.kind).toBe('duplicate');
+  expect(await listStops(r.id)).toHaveLength(1);
+});

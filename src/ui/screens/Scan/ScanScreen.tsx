@@ -10,6 +10,7 @@ import { playDuplicate, playError, playSuccess, unlockAudio } from '../../../dev
 import { captureFrame, prepareOcr, readText, rotate } from '../../../device/ocr';
 import { createScanner, decodeInWorker } from '../../../device/scanner';
 import { addressKey, formatAddressCity, formatAddressLine } from '../../../domain/address/normalize';
+import { parsePipeLabel, trackingFromCode } from '../../../domain/label/codes';
 import { parseLabelText, snapCity, type LabelAddress } from '../../../domain/label/parseLabelText';
 import { parseGlsDataMatrix } from '../../../domain/gls/parseGlsDataMatrix';
 import type { Stop, VehiclePosition } from '../../../domain/types';
@@ -17,6 +18,7 @@ import { geocodeQueue } from '../../appServices';
 import { GeocodeStatusBar } from '../../common/GeocodeStatus';
 import { CloseIcon } from '../../common/ui';
 import { POSITION_LABELS } from '../StopDetail/FindPackageSheet';
+import type { ScanOutcome } from '../../../domain/scan/applyScan';
 import { LabelCard } from './LabelCard';
 import { initialScanState, scanReducer } from './scanReducer';
 import './ScanScreen.css';
@@ -38,6 +40,12 @@ function frameReader(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
     ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
     return ctx.getImageData(0, 0, size, size);
   };
+}
+
+/** Esito del salvataggio di un'etichetta letta, nella forma che usa il banner della scansione. */
+function toScanOutcome(o: { kind: 'added' | 'merged' | 'duplicate'; stop: Stop }): ScanOutcome {
+  if (o.kind === 'duplicate') return { kind: 'duplicate', stopId: o.stop.id };
+  return o.kind === 'added' ? { kind: 'added', stop: o.stop } : { kind: 'merged', stop: o.stop };
 }
 
 /** Zona del video letta come testo: la cornice, un po' più larga per prendere tutto l'indirizzo. */
@@ -108,6 +116,8 @@ export function ScanScreen(props: {
   const lastCodeAt = useRef(0);
   const dismissed = useRef<{ key: string; at: number }>(undefined);
   const stopsRef = useRef(stops);
+  // Ultimo numero di spedizione letto da un QR o da un codice a barre: va sulla fermata che si aggiunge subito dopo.
+  const lastTracking = useRef<{ code: string; at: number }>(undefined);
   stopsRef.current = stops;
   pausedRef.current = !!card || typing;
 
@@ -120,7 +130,30 @@ export function ScanScreen(props: {
     const handle = async (text: string) => {
       const label = parseGlsDataMatrix(text);
       if (!label) {
-        // Codice senza indirizzo (altri corrieri): si legge il testo stampato. Salvato una volta per migliorare il lettore.
+        // Quadratino con i campi separati da "|" (altri mittenti): via, città e civico, si aggiunge subito.
+        const piped = parsePipeLabel(text);
+        if (piped) {
+          lastCodeAt.current = Date.now();
+          const outcome = await addLabelStop(props.routeId, piped);
+          if (outcome.kind === 'added') {
+            playSuccess();
+            geocodeQueue.enqueue(outcome.stop.id);
+          } else playDuplicate();
+          dispatch({ type: 'scanned', outcome: toScanOutcome(outcome) });
+          return;
+        }
+        // QR o codice a barre con il numero di spedizione: se il pacco è già nel giro lo dice, altrimenti lo ricorda.
+        const tracking = trackingFromCode(text);
+        if (tracking) {
+          const known = (await listStops(props.routeId)).find((s) => s.trackingNumbers.includes(tracking));
+          if (known) {
+            lastCodeAt.current = Date.now();
+            playDuplicate();
+            dispatch({ type: 'scanned', outcome: { kind: 'duplicate', stopId: known.id } });
+          } else lastTracking.current = { code: tracking, at: Date.now() };
+          return;
+        }
+        // Codice senza indirizzo né numero utile: si legge il testo stampato. Salvato una volta per migliorare il lettore.
         if (!unknownCodes.has(text)) {
           unknownCodes.add(text);
           await saveUnreadableCode(text);
@@ -248,12 +281,14 @@ export function ScanScreen(props: {
   };
 
   const addFromCard = async (address: LabelAddress) => {
-    const outcome = await addLabelStop(props.routeId, address);
+    const recent = lastTracking.current && Date.now() - lastTracking.current.at < 20_000 ? lastTracking.current.code : undefined;
+    lastTracking.current = undefined;
+    const outcome = await addLabelStop(props.routeId, address, recent);
     if (outcome.kind === 'added') {
       playSuccess();
       geocodeQueue.enqueue(outcome.stop.id);
     } else playDuplicate();
-    dispatch({ type: 'scanned', outcome });
+    dispatch({ type: 'scanned', outcome: toScanOutcome(outcome) });
     setCard(null);
   };
 
