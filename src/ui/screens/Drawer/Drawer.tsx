@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { MoreVertical, Plus, Settings } from 'lucide-react';
+import { BarChart3, ChevronRight, MoreVertical, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { deleteRoute, duplicateRoute, listRoutes, renameRoute } from '../../../data/repos';
 import type { Route } from '../../../domain/types';
@@ -13,6 +13,7 @@ interface DrawerProps {
   onOpenRoute: (id: string) => void;
   onCreateRoute: () => void;
   onOpenSettings: () => void;
+  onOpenStats: () => void;
   onClose: () => void;
 }
 
@@ -41,6 +42,14 @@ export function Drawer(props: DrawerProps) {
             <Settings size={20} aria-hidden="true" />
           </button>
         </div>
+        <button className="row drawer-stats" onClick={props.onOpenStats}>
+          <span className="row-icon" aria-hidden="true"><BarChart3 size={18} /></span>
+          <span className="grow">
+            <span className="row-title">I miei numeri</span>
+            <span className="row-sub">Medie del mese e tutti i giri fatti</span>
+          </span>
+          <ChevronRight size={18} className="chev" aria-hidden="true" />
+        </button>
         <div className="drawer-list">
           {routes && routes.length === 0 && <p className="drawer-empty muted">Nessun percorso. Creane uno per iniziare.</p>}
           {routes &&

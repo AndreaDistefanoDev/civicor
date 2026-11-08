@@ -110,12 +110,18 @@ export function Settings(props: { onClose: () => void }) {
 
       <Section title="Servizi">
         <SelectRow
+          label="Mappa"
+          value={settings.mapProvider}
+          options={[['google', 'Google Maps'], ['osm', 'OpenStreetMap (gratis)']]}
+          onChange={(mapProvider) => save({ mapProvider })}
+        />
+        <SelectRow
           label="Ricerca indirizzi"
           value={settings.geocoderProvider}
           options={[['google', 'Google (più preciso)'], ['osm', 'OpenStreetMap (gratis)']]}
           onChange={(geocoderProvider) => save({ geocoderProvider })}
         />
-        {settings.geocoderProvider === 'google' && (
+        {(settings.geocoderProvider === 'google' || settings.mapProvider === 'google') && (
           <>
             <label className="field ors-field">
               <span>Chiave Google</span>
@@ -127,8 +133,9 @@ export function Settings(props: { onClose: () => void }) {
               />
             </label>
             <p className="settings-hint muted">
-              Trova i civici con la precisione di Google Maps. Serve una chiave Google Maps Platform con Places API (New) e
-              Geocoding API attive. Resta solo su questo telefono.
+              Mappa e civici con la precisione di Google Maps. Serve una chiave Google Maps Platform con Maps JavaScript API,
+              Places API (New) e Geocoding API attive. Senza chiave valida si usa la mappa OpenStreetMap. Resta solo su
+              questo telefono.
             </p>
           </>
         )}

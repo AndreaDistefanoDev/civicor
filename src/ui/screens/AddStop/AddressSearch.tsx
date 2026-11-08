@@ -1,3 +1,4 @@
+import { ChevronRight, ClipboardList, Map } from 'lucide-react';
 import { useState } from 'react';
 import { addStopFromSuggestion, changeStopAddress } from '../../../data/manualAdd';
 import type { LatLng } from '../../../domain/types';
@@ -57,10 +58,14 @@ export function AddressSearch(props: {
           !props.stopId && (
             <div className="add-alt">
               <button className="row" onClick={props.onPickOnMap}>
-                Scegli sulla mappa
+                <span className="detail-icon" aria-hidden="true"><Map size={20} /></span>
+                <span className="grow">Scegli sulla mappa</span>
+                <ChevronRight size={18} className="chev" aria-hidden="true" />
               </button>
               <button className="row" onClick={props.onPaste}>
-                Incolla una lista di indirizzi
+                <span className="detail-icon" aria-hidden="true"><ClipboardList size={20} /></span>
+                <span className="grow">Incolla una lista di indirizzi</span>
+                <ChevronRight size={18} className="chev" aria-hidden="true" />
               </button>
             </div>
           )

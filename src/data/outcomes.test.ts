@@ -1,5 +1,5 @@
 import { db } from './db';
-import { completeRoute, markOutcome, nextStop, postponeStop, routeSummary, undoOutcome, upcomingStops } from './outcomes';
+import { completeRoute, markOutcome, nextStop, routeSummary, undoOutcome, upcomingStops } from './outcomes';
 import { createRoute, getRoute, getStop, putStop } from './repos';
 import { makeStop } from '../test/fixtures';
 
@@ -54,33 +54,12 @@ it('Non riuscita salva il motivo e il tentativo; Annulla li toglie', async () =>
   expect(back?.attempt).toBeUndefined();
 });
 
-it('Effettuata con contrassegno registra contanti o POS; Annulla torna a "da incassare"', async () => {
-  await putStop(makeStop({ id: 's1', cod: { amount: 25 } }));
-  const { previous } = await markOutcome('s1', 'done', { codMethod: 'pos' });
-  expect((await getStop('s1'))?.cod).toEqual({ amount: 25, method: 'pos' });
-  await undoOutcome('s1', previous);
-  expect((await getStop('s1'))?.cod).toEqual({ amount: 25 });
-});
-
 it('Effettuata cancella un vecchio motivo di mancata consegna', async () => {
   await putStop(makeStop({ id: 's1', outcome: 'failed', failReason: 'refused', attempt: 1 }));
   await markOutcome('s1', 'done');
   const s = await getStop('s1');
   expect(s?.failReason).toBeUndefined();
   expect(s?.attempt).toBeUndefined();
-});
-
-it('Riprova più tardi sposta la fermata in fondo senza toccare l\'ordine delle altre', async () => {
-  await putStop(makeStop({ id: 'a', sequence: 0, eta: '08:00' }));
-  await putStop(makeStop({ id: 'b', sequence: 1, eta: '08:10' }));
-  await putStop(makeStop({ id: 'c', sequence: 2, eta: '08:20' }));
-  await postponeStop('a');
-  const [a, b, c] = await Promise.all(['a', 'b', 'c'].map(getStop));
-  expect(b?.sequence).toBe(1);
-  expect(c?.sequence).toBe(2);
-  expect(a?.sequence).toBe(3);
-  expect(a?.eta).toBeUndefined();
-  expect(nextStop([a!, b!, c!])?.id).toBe('b');
 });
 
 it('le prossime fermate dopo quella attuale, nell\'ordine', () => {

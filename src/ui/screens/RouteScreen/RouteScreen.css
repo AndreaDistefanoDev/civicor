@@ -17,7 +17,7 @@
 .route-head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-4) var(--s-4) var(--s-1); }
 .route-head .grow { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
 .route-name {
-  margin: 0; font-size: var(--t-xl); font-weight: 700; font-family: 'Barlow Condensed', sans-serif; line-height: 1.1;
+  margin: 0; font-size: var(--t-xl); font-weight: 700; font-family: var(--font); line-height: 1.1;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 .route-more { background: var(--surface-2); }
@@ -91,7 +91,7 @@
 .stop-card-head .grow { flex: 1; min-width: 0; }
 .stop-card-kicker { font-size: var(--t-sm); font-weight: 600; color: var(--muted); }
 .stop-card-line {
-  margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: var(--t-2xl); font-weight: 700; line-height: 1.05;
+  margin: 0; font-family: var(--font); font-size: var(--t-2xl); font-weight: 700; line-height: 1.05;
   overflow-wrap: anywhere;
 }
 .stop-card-city { font-size: var(--t-md); color: var(--muted); }
@@ -118,7 +118,7 @@
 
 /* ---------- Giro completato ---------- */
 .completed-card { display: grid; justify-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-4); text-align: center; }
-.completed-card h3 { margin: 0; font-size: var(--t-xl); font-family: 'Barlow Condensed', sans-serif; }
+.completed-card h3 { margin: 0; font-size: var(--t-xl); font-family: var(--font); }
 .completed-check {
   width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
   background: var(--ok-soft); color: var(--ok);
@@ -135,7 +135,7 @@
 .stop-card-van .grow { flex: 1; min-width: 0; display: grid; }
 .stop-card-van-label { font-size: var(--t-xs); font-weight: 600; color: var(--muted); }
 .stop-card-van-pos {
-  font-family: 'Barlow Condensed', sans-serif; font-size: var(--t-xl); line-height: 1.05; font-weight: 700;
+  font-family: var(--font); font-size: var(--t-xl); line-height: 1.05; font-weight: 700;
   text-transform: uppercase; color: var(--text);
 }
 .stop-card-van.empty { color: var(--muted); border-style: dashed; background: none; min-height: var(--tap); font-weight: 600; }
@@ -169,3 +169,106 @@
 .day-report-line { font-weight: 600; }
 .completed-card .btn-secondary { max-width: 360px; }
 .completed-backup { margin: -2px 0 var(--s-2); font-size: var(--t-sm); }
+
+.stop-card-past {
+  display: flex; align-items: flex-start; gap: var(--s-2); margin: var(--s-3) var(--s-4) 0; padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md); background: var(--warn-soft); color: var(--warn); font-weight: 600; font-size: var(--t-sm);
+}
+.stop-card-past svg { margin-top: 2px; }
+
+/* ===================== Impaginazione da app di percorso ===================== */
+.route-head .grow { display: block; }
+.route-meta { font-size: var(--t-sm); color: var(--muted); }
+.route-name { font-size: var(--t-xl); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Percorso vuoto: icona, invito e tre riquadri per aggiungere fermate. */
+.route-empty { justify-items: center; padding: var(--s-6) var(--s-4) var(--s-5); gap: var(--s-3); }
+.route-empty-icon { color: var(--muted); }
+.route-empty p { max-width: 280px; font-size: var(--t-sm); }
+.add-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); width: 100%; margin-top: var(--s-3); }
+.add-tile {
+  display: grid; justify-items: center; gap: 6px; padding: 12px 6px; border-radius: var(--r-md);
+  border: 1px solid var(--line); background: var(--surface); color: var(--accent-text); font-weight: 500; font-size: var(--t-sm);
+}
+.add-tile:active { background: var(--surface-2); }
+
+/* Linea del tempo: numero e orario a sinistra, indirizzo, ID a destra. */
+.tl-row {
+  display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: 64px; padding: 10px var(--s-4); text-align: left;
+  background: none; border: 0; border-bottom: 1px solid var(--line); transition: background var(--dur-press) ease;
+}
+.tl-row:active { background: var(--surface-2); }
+.tl-left { flex: none; width: 40px; display: grid; justify-items: start; gap: 2px; }
+.tl-num { font-size: var(--t-sm); color: var(--muted); }
+.tl-time { font-size: var(--t-xs); color: var(--muted); }
+.tl-dot { width: 7px; height: 7px; margin: 4px 0 2px 6px; border-radius: 50%; background: var(--muted); opacity: 0.7; }
+.tl-row .grow { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.tl-title { font-size: var(--t-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-sub { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-sm); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-pkgs { display: inline-flex; align-items: center; gap: 3px; }
+.tl-end { flex: none; display: flex; align-items: center; gap: var(--s-2); }
+.tl-chip {
+  display: inline-grid; place-items: center; min-width: 30px; height: 24px; padding: 0 7px; border-radius: 6px;
+  background: var(--accent-soft); color: var(--accent-text); font-size: var(--t-xs); font-weight: 600;
+}
+.tl-chip.icon { min-width: 28px; padding: 0; }
+.tl-row.closed .tl-title { color: var(--muted); }
+.tl-setting .tl-chip { background: var(--surface-2); color: var(--muted); }
+
+/* Barra in basso: durata in verde e due pulsanti. */
+.sheet-actions.three { display: grid; grid-template-columns: auto 1fr 1.5fr; gap: 10px; align-items: center; }
+.route-duration { font-size: var(--t-lg); font-weight: 600; color: var(--ok); padding-right: var(--s-1); }
+
+/* Fermata attuale: indirizzo grande, "1/3 · orario", tre riquadri e righe con la freccetta. */
+.stop-card { padding: var(--s-3) 0 var(--s-2); }
+.stop-card-head { display: block; margin: 0 var(--s-4); }
+.stop-card-line { font-size: var(--t-xl); font-weight: 600; line-height: 1.2; }
+.stop-card-kicker { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: var(--t-md); font-weight: 400; color: var(--muted); }
+.stop-card-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+.stop-card-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); margin: var(--s-3) var(--s-4) 0; }
+.stop-card-actions.two { grid-template-columns: 1fr 1fr; }
+.action-tile {
+  display: grid; justify-items: center; align-content: center; gap: 4px; min-height: 64px; padding: 8px 4px; border-radius: var(--r-md);
+  border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: var(--t-sm); font-weight: 500;
+  transition: transform var(--dur-press) ease, filter var(--dur-press) ease; -webkit-touch-callout: none;
+}
+.action-tile:active { transform: scale(0.97); filter: brightness(0.94); }
+.action-tile.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.ok-text { color: var(--accent-text); }
+.stop-card-rows { margin-top: var(--s-3); border-top: 1px solid var(--line); }
+.stop-card-rows.more { margin-top: 0; border-top: 10px solid var(--surface-2); }
+.stop-card-rows .row { min-height: 54px; }
+.stop-card-van-pos { display: block; font-size: var(--t-lg); font-weight: 600; text-transform: uppercase; }
+.stop-card-rows .stop-card-notes { margin: 0; padding: 0; background: none; border: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detail-id { font-size: var(--t-sm); font-weight: 600; color: var(--muted); }
+.stop-card-contact { display: flex; gap: var(--s-2); margin: 0; }
+.stop-card-contact .contact-btn { flex: 1; min-width: 0; min-height: 40px; padding: 0 6px; font-size: var(--t-xs); }
+.stop-card-next { flex-wrap: nowrap; overflow: hidden; }
+.stop-card-past { margin: var(--s-3) var(--s-4) 0; }
+
+/* Fine giro */
+.completed-copy { max-width: 360px; color: var(--accent-text); }
+
+/* Ottimizzazione in corso: finestrella con titolo, disegno, passo e barra blu. */
+.dialog.optimizing { justify-items: center; gap: var(--s-3); padding: var(--s-5); background: var(--surface-2); }
+.dialog.optimizing h2 { font-size: var(--t-lg); font-weight: 600; }
+.optimizing-art { width: 180px; height: 100px; color: var(--accent); }
+.optimizing-pin { fill: var(--accent); }
+.optimizing-num { fill: #fff; font: 600 13px var(--font); }
+.optimizing-art path:first-child { animation: route-dash 1.4s linear infinite; }
+@keyframes route-dash { to { stroke-dashoffset: -20; } }
+.dialog.optimizing p { margin: 0; font-weight: 500; color: var(--text); }
+.dialog.optimizing .progress { width: 100%; height: 8px; border-radius: 4px; background: var(--surface-3); }
+.dialog.optimizing .progress span { border-radius: 4px; }
+.stop-card-head { position: relative; padding-right: 48px; }
+.stop-card-close { position: absolute; right: 0; top: 0; width: 36px; height: 36px; }
+.list-current { padding: var(--s-3) var(--s-4) var(--s-2); }
+
+/* Tasti sotto il nome del percorso: Condividi percorso, Carica veicolo. */
+.route-chips { display: flex; gap: var(--s-2); overflow-x: auto; padding: var(--s-2) var(--s-4) var(--s-3); }
+.chip-btn {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: var(--r-md);
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: var(--t-sm); font-weight: 500;
+}
+.chip-btn svg { color: var(--accent-text); }
+.chip-btn:active { background: var(--surface-2); }

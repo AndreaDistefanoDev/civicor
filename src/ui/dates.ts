@@ -21,3 +21,9 @@ export function shortDate(iso: string): string {
   const [, m, d] = iso.split('-').map(Number);
   return `${d} ${MONTHS[m - 1].slice(0, 3).toLowerCase()}`;
 }
+
+/** Durata del giro: "13 min", "1 h 30 min". */
+export function formatDuration(minutes: number): string {
+  const m = Math.round(minutes);
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`;
+}

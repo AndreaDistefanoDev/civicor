@@ -2,7 +2,7 @@
 import { db } from '../data/db';
 import { createRoute, putStops } from '../data/repos';
 import type { Stop } from '../domain/types';
-import { todayIso } from './dates';
+import { addDays, todayIso } from './dates';
 
 const STREETS = ['Via Esempio, 12', 'Corso Modello, 40', 'Via Prova, 7', 'Piazza Campione, 3', 'Via Fittizia, 21/B',
   'Viale Immaginario, 88', 'Via Demo, 5', 'Contrada Inventata'];
@@ -20,11 +20,27 @@ export async function seedDemo(): Promise<void> {
     outcome: i < 2 ? 'done' : 'pending', outcomeAt: i < 2 ? Date.now() - (2 - i) * 600000 : undefined,
     senderNotes: i === 1 ? 'CHIAMARE PRIMA' : undefined, createdAt: Date.now(),
     findPackage: { positions: ([['back', 'left'], ['shelf'], ['middle'], ['front', 'right']] as const)[i % 4].slice(), size: i === 2 ? 'box' : undefined },
-    phone: i === 2 ? '3330000000' : undefined, cod: i === 2 ? { amount: 25 } : undefined,
+    phone: i === 2 ? '3330000000' : undefined,
   }));
   await putStops(stops);
   await db.routes.update(route.id, {
     status: 'in_progress', totals: { km: 23.4, minutes: 95, endTime: '11:40' }, startLocation: { lat: 36.925, lng: 14.73 },
     polyline: stops.map((s) => [s.location!.lng, s.location!.lat] as [number, number]),
   });
+
+  // Giri passati (inventati) per "I miei numeri".
+  for (let d = 1; d <= 6; d++) {
+    const date = addDays(todayIso(), -d * 2);
+    const past = await createRoute({ date, name: `Giro ${date.slice(8)}` });
+    const [y, m, day] = date.split('-').map(Number);
+    const at = (min: number) => new Date(y, m - 1, day, 8, 0).getTime() + min * 60000;
+    const n = 90 + d * 7;
+    await putStops(Array.from({ length: n }, (_, i): Stop => ({
+      ...stops[i % stops.length], id: `past-${d}-${i}`, routeId: past.id, originalIndex: i, sequence: i, displayId: i + 1,
+      packages: 1 + (i % 5 === 0 ? 1 : 0),
+      outcome: i % 17 === 2 ? 'failed' : 'done', failReason: i % 17 === 2 ? (i % 2 ? 'refused' : 'not_home') : undefined,
+      outcomeAt: at(i * 3.6), eta: undefined, phone: undefined,
+    })));
+    await db.routes.update(past.id, { status: 'completed', totals: { km: 55 + d * 3.2, minutes: 420, endTime: '15:30' } });
+  }
 }

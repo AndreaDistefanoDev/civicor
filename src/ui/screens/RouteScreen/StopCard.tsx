@@ -1,13 +1,12 @@
 import {
-  Banknote, Check, ChevronRight, Clock, Copy, CreditCard, MessageCircle, MessageSquareText, Navigation, NotebookPen,
-  Package, Pencil, Phone, Truck, X,
+  ChevronRight, CopyPlus, ListOrdered, Map as MapIcon, MessageCircle,
+  MessageSquareText, Navigation, NotebookPen, Package, PackageCheck, PackageX, Pencil, Phone, Truck, X,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { duplicateStop, updateStop } from '../../../data/stopOps';
 import { formatAddressCity, formatAddressLine } from '../../../domain/address/normalize';
-import { formatEuro } from '../../../domain/cod/cod';
 import { contactLinks } from '../../../domain/contact/phone';
-import type { CodMethod, FailReason, NavApp, Stop } from '../../../domain/types';
+import type { FailReason, NavApp, Stop } from '../../../domain/types';
 import { PickerSheet } from '../../common/ui';
 import { FindPackageSheet, POSITION_LABELS, SIZE_LABELS } from '../StopDetail/FindPackageSheet';
 
@@ -29,7 +28,7 @@ export function vanPosition(fp?: Stop['findPackage']): string {
   return fp?.positions.map((p) => POSITION_LABELS[p]).join(' · ') ?? '';
 }
 
-type Sheet = 'nav' | 'fail' | 'cod' | 'van' | null;
+type Sheet = 'nav' | 'fail' | 'van' | null;
 
 /** Card della fermata corrente durante il giro. Tenendo premuto "Naviga" si sceglie l'app per questa volta. */
 export function StopCard(props: {
@@ -39,10 +38,11 @@ export function StopCard(props: {
   /** Le prossime fermate da fare, per preparare i pacchi. */
   upcoming: Stop[];
   onNavigate: (app?: NavApp) => void;
-  onDone: (codMethod?: CodMethod) => void;
+  onDone: () => void;
   onFailed: (reason: FailReason, attempt: 1 | 2) => void;
-  onPostpone: () => void;
   onOpen: () => void;
+  /** X in alto: chiude la scheda e mostra l'elenco del percorso. */
+  onClose?: () => void;
 }) {
   const { stop } = props;
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -62,135 +62,129 @@ export function StopCard(props: {
   const van = vanPosition(stop.findPackage);
   const size = stop.findPackage?.size;
   const links = stop.phone ? contactLinks(stop.phone, ARRIVING) : undefined;
-  const codLabel = stop.cod && `Contrassegno ${formatEuro(stop.cod.amount)}`;
 
   return (
     <section className="stop-card" aria-label="Fermata attuale">
       <div className="stop-card-head">
-        <span className="plate lg">{stop.displayId}</span>
-        <div className="grow">
-          <div className="stop-card-kicker">Fermata {props.position} di {props.total}</div>
-          <h3 className="stop-card-line">{formatAddressLine(stop.address)}</h3>
-          <div className="stop-card-city">{formatAddressCity(stop.address)}</div>
+        {props.onClose && (
+          <button className="icon-btn stop-card-close" aria-label="Chiudi scheda" onClick={props.onClose}>
+            <X size={20} aria-hidden="true" />
+          </button>
+        )}
+        <h3 className="stop-card-line">{formatAddressLine(stop.address)}</h3>
+        <div className="stop-card-kicker">
+          <span className="stop-card-dot" aria-hidden="true" />
+          <span className="num">{`${props.position}/${props.total}${stop.eta ? ` · ${stop.eta}` : ''}`}</span>
         </div>
       </div>
 
-      {van || size ? (
-        <button className="stop-card-van" onClick={() => setSheet('van')} aria-label={`Nel furgone: ${[van, size && SIZE_LABELS[size]].filter(Boolean).join(', ')}`}>
-          <Truck size={22} aria-hidden="true" />
-          <span className="grow">
-            <span className="stop-card-van-label">Nel furgone</span>
-            <strong className="stop-card-van-pos">{van || SIZE_LABELS[size!]}</strong>
-          </span>
-          {van && size && <span className="pill">{SIZE_LABELS[size]}</span>}
+      <div className="stop-card-actions">
+        <button
+          className="action-tile primary"
+          onPointerDown={startPress}
+          onPointerUp={endPress}
+          onPointerLeave={endPress}
+          onContextMenu={(e) => e.preventDefault()}
+          onClick={() => !longPressed.current && props.onNavigate()}
+        >
+          <Navigation size={22} aria-hidden="true" />
+          Naviga
         </button>
-      ) : (
-        <button className="stop-card-van empty" onClick={() => setSheet('van')}>
-          <Truck size={20} aria-hidden="true" />
-          <span className="grow">Dove è il pacco nel furgone?</span>
-          <ChevronRight size={18} aria-hidden="true" />
-        </button>
-      )}
-
-      <div className="stop-card-chips">
-        {stop.eta && <span className="pill accent num">{stop.eta}</span>}
-        {codLabel && (
-          <span className="pill warn">
-            <Banknote size={14} aria-hidden="true" /> {codLabel}
-          </span>
-        )}
-        {stop.packages > 1 && (
-          <span className="pill">
-            <Package size={14} aria-hidden="true" /> {stop.packages} pacchi
-          </span>
-        )}
-        {stop.kind === 'pickup' && <span className="pill">Ritiro</span>}
-        {stop.timeWindows.length > 0 && (
-          <span className="pill">{stop.timeWindows.map((w) => `${w.start}–${w.end}`).join(', ')}</span>
-        )}
-      </div>
-
-      {notes && <p className="stop-card-notes">{notes}</p>}
-
-      {links && (
-        <div className="stop-card-contact">
-          <a className="contact-btn" href={links.call}>
-            <Phone size={18} aria-hidden="true" />
-            Chiama
-          </a>
-          <a className="contact-btn" href={links.sms}>
-            <MessageSquareText size={18} aria-hidden="true" />
-            SMS
-          </a>
-          <a className="contact-btn" href={links.whatsapp} target="_blank" rel="noreferrer">
-            <MessageCircle size={18} aria-hidden="true" />
-            WhatsApp
-          </a>
-        </div>
-      )}
-
-      <button
-        className="btn-primary stop-card-nav"
-        onPointerDown={startPress}
-        onPointerUp={endPress}
-        onPointerLeave={endPress}
-        onContextMenu={(e) => e.preventDefault()}
-        onClick={() => !longPressed.current && props.onNavigate()}
-      >
-        <Navigation size={20} aria-hidden="true" />
-        Naviga
-      </button>
-      <div className="stop-card-outcomes">
-        <button className="outcome failed" onClick={() => setSheet('fail')}>
-          <X size={20} aria-hidden="true" />
+        <button className="action-tile" onClick={() => setSheet('fail')}>
+          <PackageX size={22} aria-hidden="true" />
           Non riuscita
         </button>
-        <button className="outcome done" onClick={() => (stop.cod ? setSheet('cod') : props.onDone())}>
-          <Check size={20} aria-hidden="true" />
+        <button className="action-tile" onClick={props.onDone}>
+          <PackageCheck size={22} aria-hidden="true" />
           Effettuata
         </button>
       </div>
 
-      {props.upcoming.length > 0 && (
-        <div className="stop-card-next">
-          <span className="stop-card-next-label">Poi</span>
-          {props.upcoming.map((s) => (
-            <span key={s.id} className="stop-card-next-item">
-              <span className="plate">{s.displayId}</span>
-              <span className="stop-card-next-text">{vanPosition(s.findPackage) || formatAddressLine(s.address)}</span>
+      <div className="stop-card-rows">
+        <button className="row" onClick={() => setSheet('van')} aria-label={van || size ? `Nel furgone: ${[van, size && SIZE_LABELS[size]].filter(Boolean).join(', ')}` : undefined}>
+          <span className="detail-icon" aria-hidden="true"><Truck size={20} /></span>
+          {van || size ? (
+            <span className="grow">
+              <span className="row-sub">Nel furgone</span>
+              <strong className="stop-card-van-pos">{van || SIZE_LABELS[size!]}</strong>
             </span>
-          ))}
-        </div>
-      )}
-
-      <div className="card stop-card-more">
-        <button className="row" onClick={props.onOpen}>
-          <span className="row-icon" aria-hidden="true"><NotebookPen size={18} /></span>
-          <span className="grow">{stop.notes ? 'Modifica note' : 'Aggiungi note'}</span>
+          ) : (
+            <span className="grow muted">Dove è il pacco nel furgone?</span>
+          )}
+          {van && size && <span className="value">{SIZE_LABELS[size]}</span>}
           <ChevronRight size={18} className="chev" aria-hidden="true" />
         </button>
-        {props.upcoming.length > 0 && (
-          <button className="row" onClick={props.onPostpone}>
-            <span className="row-icon" aria-hidden="true"><Clock size={18} /></span>
-            <span className="grow">
-              Riprova più tardi
-              <span className="row-sub">Va in fondo, l'ordine delle altre non cambia</span>
-            </span>
+        {notes ? (
+          <button className="row" onClick={props.onOpen}>
+            <span className="detail-icon" aria-hidden="true"><NotebookPen size={20} /></span>
+            <span className="grow stop-card-notes">{notes}</span>
+            <ChevronRight size={18} className="chev" aria-hidden="true" />
+          </button>
+        ) : (
+          <button className="row" onClick={props.onOpen}>
+            <span className="detail-icon" aria-hidden="true"><NotebookPen size={20} /></span>
+            <span className="grow muted">Aggiungi note</span>
+            <ChevronRight size={18} className="chev" aria-hidden="true" />
           </button>
         )}
-        <button className="row" onClick={props.onOpen}>
-          <span className="row-icon" aria-hidden="true"><Pencil size={18} /></span>
-          <span className="grow">
-            Modifica fermata
-            <span className="row-sub">
-              {stop.phone ? '' : 'Telefono, contrassegno · '}ID {stop.displayId} · In origine {ORDINAL(stop.originalIndex + 1)}
+        {links && (
+          <div className="row stop-card-contact">
+            <span className="detail-icon" aria-hidden="true"><Phone size={20} /></span>
+            <a className="contact-btn" href={links.call}>
+              <Phone size={16} aria-hidden="true" />
+              Chiama
+            </a>
+            <a className="contact-btn" href={links.sms}>
+              <MessageSquareText size={16} aria-hidden="true" />
+              SMS
+            </a>
+            <a className="contact-btn" href={links.whatsapp} target="_blank" rel="noreferrer">
+              <MessageCircle size={16} aria-hidden="true" />
+              WhatsApp
+            </a>
+          </div>
+        )}
+        <div className="row">
+          <span className="detail-icon" aria-hidden="true"><MapIcon size={20} /></span>
+          <span className="grow">{formatAddressCity(stop.address)}</span>
+          {stop.packages > 1 && (
+            <span className="value">
+              <Package size={14} aria-hidden="true" /> {stop.packages} pacchi
             </span>
+          )}
+        </div>
+        <div className="row">
+          <span className="detail-icon detail-id" aria-hidden="true">ID</span>
+          <span className="grow">
+            <strong>{stop.displayId}</strong> <span className="muted">In origine {ORDINAL(stop.originalIndex + 1)}</span>
           </span>
+          {stop.kind === 'pickup' && <span className="pill">Ritiro</span>}
+          {stop.timeWindows.length > 0 && <span className="value">{stop.timeWindows.map((w) => `${w.start}–${w.end}`).join(', ')}</span>}
+        </div>
+        {props.upcoming.length > 0 && (
+          <div className="row stop-card-next">
+            <span className="detail-icon" aria-hidden="true"><ListOrdered size={20} /></span>
+            <span className="stop-card-next-label">Poi</span>
+            {props.upcoming.map((s) => (
+              <span key={s.id} className="stop-card-next-item">
+                <span className="tl-chip num">{s.displayId}</span>
+                <span className="stop-card-next-text">{vanPosition(s.findPackage) || formatAddressLine(s.address)}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="stop-card-rows more">
+        <button className="row" onClick={props.onOpen}>
+          <span className="detail-icon" aria-hidden="true"><Pencil size={20} /></span>
+          <span className="grow">Modifica fermata</span>
           <ChevronRight size={18} className="chev" aria-hidden="true" />
         </button>
         <button className="row" onClick={() => void duplicateStop(stop.id)}>
-          <span className="row-icon" aria-hidden="true"><Copy size={18} /></span>
+          <span className="detail-icon" aria-hidden="true"><CopyPlus size={20} /></span>
           <span className="grow">Duplica fermata</span>
+          <ChevronRight size={18} className="chev" aria-hidden="true" />
         </button>
       </div>
 
@@ -233,26 +227,6 @@ export function StopCard(props: {
               {label}
             </button>
           ))}
-        </PickerSheet>
-      )}
-      {sheet === 'cod' && codLabel && (
-        <PickerSheet title={codLabel} onCancel={() => setSheet(null)} onDone={() => setSheet(null)}>
-          <p className="picker-hint">Come ha pagato?</p>
-          <div className="cod-methods">
-            {([['cash', 'Contanti', Banknote], ['pos', 'POS', CreditCard]] as const).map(([method, label, Icon]) => (
-              <button
-                key={method}
-                className="btn-secondary"
-                onClick={() => {
-                  setSheet(null);
-                  props.onDone(method);
-                }}
-              >
-                <Icon size={20} aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
         </PickerSheet>
       )}
       {sheet === 'van' && (

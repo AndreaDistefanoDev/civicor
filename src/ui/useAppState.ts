@@ -14,7 +14,9 @@ export type ScreenName =
   | 'search'
   | 'paste'
   | 'voice'
-  | 'pickOnMap';
+  | 'pickOnMap'
+  | 'stats'
+  | 'loadVehicle';
 
 export interface OpenScreen {
   name: ScreenName;

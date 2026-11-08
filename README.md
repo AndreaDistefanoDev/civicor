@@ -5,8 +5,9 @@ Gratis, senza account, con i dati solo sul tuo telefono.
 
 ## Cosa fa
 
-- **Scansione delle etichette GLS**: legge il codice Data Matrix (il quadratino) e compila da sola via, civico,
-  CAP e note del mittente. Il civico non viene mai letto male.
+- **Scansione delle etichette di qualsiasi corriere**: inquadri l'etichetta e Civicor legge l'indirizzo stampato
+  (sul telefono, la foto non esce), scegliendo il destinatario e scartando il mittente; controlli il civico e aggiungi.
+  Se l'etichetta ha un codice che contiene già l'indirizzo (es. il Data Matrix GLS) lo usa da solo, senza conferma.
 - **Verifica degli indirizzi**: se la mappa non conosce un civico, te lo mostra prima di partire. Sposti il punto
   col dito e Civicor se lo ricorda per le volte successive.
 - **Ottimizzazione** di 130+ fermate, con fermate da fare per prime o per ultime, fasce orarie e sosta.

@@ -33,6 +33,12 @@ export default defineConfig(({ command }) => ({
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         runtimeCaching: [
           {
+            // Lettore di testo delle etichette e dati della lingua italiana: scaricati una volta, poi anche senza rete.
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/(tesseract\.js@|tesseract\.js-core@|@tesseract\.js-data\/)/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'ocr', expiration: { maxEntries: 20, maxAgeSeconds: 31536000 } },
+          },
+          {
             urlPattern: /^https:\/\/tiles\.openfreemap\.org\//,
             handler: 'CacheFirst',
             options: {

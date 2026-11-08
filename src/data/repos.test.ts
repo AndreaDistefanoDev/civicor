@@ -65,13 +65,13 @@ it('duplicare un percorso copia le fermate riportandole da fare', async () => {
 
 it('impostazioni predefinite su database vuoto', async () => {
   expect(await getSettings()).toEqual({ navApp: 'waze', defaultServiceMinutes: 1, vehicle: 'car',
-    avoidTolls: false, idMode: 'classic', theme: 'dark', retentionMonths: 12, geocoderProvider: 'osm', keepAwake: true });
+    avoidTolls: false, idMode: 'classic', theme: 'auto', retentionMonths: 12, geocoderProvider: 'osm', keepAwake: true, mapProvider: 'google', mapMode: '2d', mapSatellite: false });
 });
 
 it('crea il tipo Standard una sola volta', async () => {
   await listStopTypes();
   const types = await listStopTypes();
-  expect(types).toEqual([{ id: 'standard', name: 'Standard', color: '#ffc23d', position: 0, builtIn: true }]);
+  expect(types).toEqual([{ id: 'standard', name: 'Standard', color: '#1f6bff', position: 0, builtIn: true }]);
 });
 
 it('il tipo Standard non si elimina', async () => {

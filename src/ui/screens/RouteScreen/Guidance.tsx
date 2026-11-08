@@ -1,13 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Check, CircleCheckBig, Flag, Navigation, ShieldCheck } from 'lucide-react';
-import { completeRoute, markOutcome, nextStop, postponeStop, routeSummary, undoOutcome, upcomingStops } from '../../../data/outcomes';
-import { getSettings, patchStop, updateRoute } from '../../../data/repos';
+import { Check, CircleCheckBig, CopyPlus, Map as MapIcon, Navigation, ShieldCheck } from 'lucide-react';
+import { completeRoute, markOutcome, nextStop, routeSummary, undoOutcome, upcomingStops } from '../../../data/outcomes';
+import { duplicateRoute, getSettings, updateRoute } from '../../../data/repos';
 import { openExternal } from '../../../device/openExternal';
 import { lastBackupLabel } from '../../../domain/backup/lastBackup';
-import { codTotals, formatEuro } from '../../../domain/cod/cod';
 import { buildNavigationAppUrl, buildNavigationUrl } from '../../../domain/nav/navLinks';
-import type { CodMethod, FailReason, LatLng, NavApp, Route, Stop } from '../../../domain/types';
+import type { FailReason, LatLng, NavApp, Route, Stop } from '../../../domain/types';
 import { downloadBackup } from '../../backupDownload';
+import { formatDuration } from '../../dates';
 import { useAppState } from '../../useAppState';
 import { FAIL_REASONS, StopCard, failReasonLabel } from './StopCard';
 import { StopList } from './StopList';
@@ -18,13 +18,12 @@ function navigate(to: LatLng | undefined, app: NavApp) {
   openExternal(buildNavigationAppUrl(app, to), buildNavigationUrl(app, to));
 }
 
-/** Fine giornata: cosa riportare in sede (mancate per motivo, contrassegni). */
+/** Fine giornata: consegne mancate per motivo, da riportare in sede. */
 function DayReport(props: { stops: Stop[] }) {
   const failed = props.stops.filter((s) => s.outcome === 'failed');
-  const cod = codTotals(props.stops);
   const reasons = FAIL_REASONS.map(([r, label]) => [label, failed.filter((s) => (s.failReason ?? 'other') === r).length] as const)
     .filter(([, n]) => n > 0);
-  if (reasons.length === 0 && cod.count === 0) return null;
+  if (reasons.length === 0) return null;
   return (
     <div className="card day-report">
       {reasons.length > 0 && (
@@ -35,20 +34,13 @@ function DayReport(props: { stops: Stop[] }) {
           ))}
         </div>
       )}
-      {cod.count > 0 && (
-        <div className="day-report-block">
-          <div className="day-report-title">Contrassegni</div>
-          <div className="day-report-line num">Contanti: {formatEuro(cod.cash)}</div>
-          <div className="day-report-line num">POS: {formatEuro(cod.pos)}</div>
-          {cod.returned > 0 && <div className="day-report-line num">Da riportare: {formatEuro(cod.returned)}</div>}
-          {cod.toCollect > 0 && <div className="day-report-line num">Ancora da incassare: {formatEuro(cod.toCollect)}</div>}
-        </div>
-      )}
     </div>
   );
 }
 
-export function CompletedCard(props: { stops: Stop[]; onNewRoute: () => void }) {
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+export function CompletedCard(props: { stops: Stop[]; onNewRoute: () => void; onCopyStops?: () => void }) {
   const s = routeSummary(props.stops);
   const settings = useLiveQuery(getSettings, []);
   return (
@@ -58,9 +50,15 @@ export function CompletedCard(props: { stops: Stop[]; onNewRoute: () => void }) 
       </div>
       <h3>Percorso completato!</h3>
       <div className="completed-stats">
-        <span>{s.done} fermate</span>
-        <span>{s.failed} fermate mancate</span>
+        <span>{plural(s.done, 'fermata', 'fermate')}</span>
+        <span>{plural(s.failed, 'fermata mancata', 'fermate mancate')}</span>
       </div>
+      {props.onCopyStops && (
+        <button className="btn-secondary completed-copy" onClick={props.onCopyStops}>
+          <CopyPlus size={20} aria-hidden="true" />
+          Copia le fermate in un nuovo percorso
+        </button>
+      )}
       <DayReport stops={props.stops} />
       <button className="btn-secondary" onClick={() => void downloadBackup()}>
         <ShieldCheck size={20} aria-hidden="true" />
@@ -98,7 +96,14 @@ export function RouteProgress(props: { stops: Stop[] }) {
 }
 
 /** Percorso confermato, in corso e completato. */
-export function Guidance(props: { route: Route; stops: Stop[] }) {
+export function Guidance(props: {
+  route: Route;
+  stops: Stop[];
+  /** Durante il giro: solo la fermata attuale ('card') o l'elenco del percorso ('list'). */
+  view?: 'card' | 'list';
+  onCloseCard?: () => void;
+  onShowCard?: () => void;
+}) {
   const app = useAppState();
   const settings = useLiveQuery(getSettings, []);
   const { route, stops } = props;
@@ -106,11 +111,17 @@ export function Guidance(props: { route: Route; stops: Stop[] }) {
   const navApp = settings.navApp;
   const openStop = (id: string) => app.openScreen('stopDetail', { stopId: id });
 
+  const copyStops = async () => {
+    const copy = await duplicateRoute(route.id);
+    app.setCurrentRouteId(copy.id);
+  };
+
   if (route.status === 'confirmed') {
     return (
       <>
         <StopList stops={stops} onOpen={openStop} />
-        <div className="sheet-actions two">
+        <div className="sheet-actions three">
+          {route.totals && <span className="route-duration num">{formatDuration(route.totals.minutes)}</span>}
           <button className="btn-secondary" onClick={() => void updateRoute(route.id, { status: 'optimized' })}>
             Modifica
           </button>
@@ -122,13 +133,14 @@ export function Guidance(props: { route: Route; stops: Stop[] }) {
     );
   }
 
-  if (route.status === 'completed') return <CompletedCard stops={stops} onNewRoute={() => app.openScreen('createRoute')} />;
+  if (route.status === 'completed')
+    return <CompletedCard stops={stops} onNewRoute={() => app.openScreen('createRoute')} onCopyStops={() => void copyStops()} />;
 
   const current = nextStop(stops);
   const ordered = [...stops].sort((a, b) => (a.sequence ?? a.originalIndex) - (b.sequence ?? b.originalIndex));
 
-  const done = async (stop: Stop, codMethod?: CodMethod) => {
-    const { previous } = await markOutcome(stop.id, 'done', { codMethod });
+  const done = async (stop: Stop) => {
+    const { previous } = await markOutcome(stop.id, 'done');
     app.showToast(`Fermata ${stop.displayId} contrassegnata come effettuata`, {
       label: 'Annulla',
       onPress: () => void undoOutcome(stop.id, previous),
@@ -141,65 +153,72 @@ export function Guidance(props: { route: Route; stops: Stop[] }) {
       onPress: () => void undoOutcome(stop.id, previous),
     });
   };
-  const postpone = async (stop: Stop) => {
-    const previous = await postponeStop(stop.id);
-    if (!previous) return;
-    app.showToast(`Fermata ${stop.displayId} spostata in fondo`, {
-      label: 'Annulla',
-      onPress: () => void patchStop(stop.id, previous),
-    });
-  };
 
   if (!current) {
     const end = route.settings.end;
     const endPoint = end.mode === 'return' ? route.startLocation : end.mode === 'address' ? end.location : undefined;
-    if (!endPoint) return <CompletedCard stops={stops} onNewRoute={() => app.openScreen('createRoute')} />;
+    if (!endPoint)
+      return <CompletedCard stops={stops} onNewRoute={() => app.openScreen('createRoute')} onCopyStops={() => void copyStops()} />;
     return (
-      <>
-        <RouteProgress stops={stops} />
-        <section className="stop-card" aria-label="Rientro">
-          <div className="stop-card-head">
-            <span className="plate lg" aria-hidden="true">
-              <Flag size={20} />
-            </span>
-            <div className="grow">
-              <div className="stop-card-kicker">Posizione finale{route.totals ? ` · ${route.totals.endTime}` : ''}</div>
-              <h3 className="stop-card-line">{end.mode === 'address' ? end.address.street : 'Posizione iniziale'}</h3>
-            </div>
-          </div>
-          <button className="btn-primary stop-card-nav" onClick={() => navigate(endPoint, navApp)}>
-            <Navigation size={20} aria-hidden="true" />
+      <section className="stop-card" aria-label="Rientro">
+        <div className="stop-card-head">
+          <h3 className="stop-card-line">{end.mode === 'address' ? end.address.street : 'Posizione iniziale'}</h3>
+          <div className="stop-card-kicker">Posizione finale{route.totals ? ` · ${route.totals.endTime}` : ''}</div>
+        </div>
+        <div className="stop-card-actions two">
+          <button className="action-tile primary" onClick={() => navigate(endPoint, navApp)}>
+            <Navigation size={22} aria-hidden="true" />
             Naviga
           </button>
-          <div className="stop-card-outcomes single">
-            <button className="outcome done" onClick={() => void completeRoute(route.id)}>
-              <Check size={20} aria-hidden="true" />
-              Percorso completato
-            </button>
-          </div>
-        </section>
-      </>
+          <button className="action-tile" onClick={() => void completeRoute(route.id)}>
+            <Check size={22} className="ok-text" aria-hidden="true" />
+            Percorso completato
+          </button>
+        </div>
+        <div className="stop-card-rows">
+          <button className="row" onClick={() => app.openScreen('routeDetails', { routeId: route.id })}>
+            <span className="detail-icon" aria-hidden="true"><MapIcon size={20} /></span>
+            <span className="grow">Cambia posizione finale</span>
+          </button>
+        </div>
+      </section>
     );
   }
 
+  if (props.view === 'list') return <GuidanceList route={route} stops={stops} onShowCard={props.onShowCard} openStop={openStop} />;
+
   return (
     <>
-      <RouteProgress stops={stops} />
       <StopCard
         stop={current}
         position={ordered.indexOf(current) + 1}
         total={stops.length}
         upcoming={upcomingStops(stops, current.id, 2)}
         onNavigate={(chosen) => navigate(current.location, chosen ?? navApp)}
-        onDone={(codMethod) => void done(current, codMethod)}
+        onDone={() => void done(current)}
         onFailed={(reason, attempt) => void failed(current, reason, attempt)}
-        onPostpone={() => void postpone(current)}
         onOpen={() => openStop(current.id)}
+        onClose={props.onCloseCard}
       />
-      <div className="section-title">Tutte le fermate</div>
-      <StopList stops={stops} onOpen={openStop} />
+    </>
+  );
+}
+
+/** Elenco del percorso durante il giro (dopo aver chiuso la scheda della fermata). */
+function GuidanceList(props: { route: Route; stops: Stop[]; onShowCard?: () => void; openStop: (id: string) => void }) {
+  return (
+    <>
+      {props.onShowCard && (
+        <div className="list-current">
+          <button className="btn-primary" onClick={props.onShowCard}>
+            <Navigation size={20} aria-hidden="true" />
+            Torna alla fermata attuale
+          </button>
+        </div>
+      )}
+      <StopList stops={props.stops} onOpen={props.openStop} />
       <div className="list-end">
-        <button className="btn-ghost" onClick={() => void completeRoute(route.id)}>
+        <button className="btn-ghost" onClick={() => void completeRoute(props.route.id)}>
           Contrassegna percorso come completato
         </button>
       </div>

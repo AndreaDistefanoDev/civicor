@@ -1,14 +1,31 @@
 .scan { position: fixed; inset: 0; z-index: 45; background: #000; display: flex; flex-direction: column; }
 .scan-camera { position: relative; flex: 1; overflow: hidden; }
 .scan-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scan-tap { position: absolute; inset: 0; z-index: 1; border: 0; background: none; cursor: pointer; }
+/* Cornice a quattro angoli bianchi, come nei mirini delle fotocamere. */
 .scan-frame {
-  position: absolute; left: 50%; top: 50%; width: min(72vw, 300px); aspect-ratio: 1; transform: translate(-50%, -50%);
-  border: 3px solid var(--accent); border-radius: 18px; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+  --c: #fff; --len: 34px; --w: 4px;
+  position: absolute; z-index: 1; left: 50%; top: 46%; width: min(80vw, 330px); aspect-ratio: 1.1; transform: translate(-50%, -50%);
+  pointer-events: none; border-radius: 14px;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--len) var(--w) no-repeat,
+    linear-gradient(var(--c), var(--c)) top left / var(--w) var(--len) no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / var(--len) var(--w) no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / var(--w) var(--len) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / var(--len) var(--w) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--len) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / var(--len) var(--w) no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--len) no-repeat;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.3);
 }
 .scan-frame.flash { animation: scan-flash 380ms ease-out; }
 @keyframes scan-flash {
-  0% { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 45%, transparent); }
-  100% { border-color: var(--accent); background: transparent; }
+  0% { --c: #46d483; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.3), inset 0 0 0 200px rgba(70, 212, 131, 0.35); }
+  100% { --c: #fff; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.3); }
+}
+.scan-tap-hint {
+  position: absolute; z-index: 1; left: 0; right: 0; top: calc(46% + min(40vw, 165px) / 1.1 + 18px); margin: 0 24px; pointer-events: none;
+  text-align: center; color: #fff; font-weight: 500; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 .scan-close { position: absolute; left: 12px; top: calc(env(safe-area-inset-top) + 10px); background: rgba(0, 0, 0, 0.55); color: #fff; }
 .scan-torch {
@@ -50,3 +67,20 @@
 .scan-van-title { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-sm); font-weight: 600; color: var(--muted); }
 .scan-van-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .scan-van-chips .chip { min-height: 44px; }
+
+/* Lettura del testo stampato (etichette di qualsiasi corriere) */
+.scan-read { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2); }
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.label-nothing { margin: 0; color: var(--warn); font-weight: 600; text-align: center; }
+
+.label-result, .label-typing { width: 100%; display: grid; gap: 0; }
+.label-result .field, .label-typing .field { padding: 0 0 var(--s-3); }
+.label-choices { display: flex; margin-bottom: var(--s-3); }
+.label-choices button { flex: 1; }
+.label-name { font-family: var(--font); font-size: var(--t-xl); font-weight: 700; margin-bottom: var(--s-2); }
+.label-place { display: grid; grid-template-columns: 7rem 1fr; gap: var(--s-2); }
+.label-check { margin: 0 0 var(--s-3); font-size: var(--t-sm); }
+.label-actions { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-bottom: var(--s-2); }
+/* I tasti sopra la fotocamera restano sopra lo strato "tocca per leggere". */
+.scan-close, .scan-torch, .scan-banner { z-index: 2; }

@@ -31,7 +31,7 @@ it('apre il percorso di oggi con lo stato vuoto', async () => {
   render(<App />);
   expect(await screen.findByText('Giro di prova')).toBeInTheDocument();
   expect(screen.getByText('Aggiungi le prime fermate e inizia a creare un percorso')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Aggiungi fermata' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Scansiona' })).toBeInTheDocument();
 });
 
 it('il menu apre il drawer con i percorsi', async () => {

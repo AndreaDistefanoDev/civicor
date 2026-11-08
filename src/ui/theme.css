@@ -1,7 +1,6 @@
 /*
- * Civicor — asfalto e segnaletica.
- * Sfondo grigio-blu asfalto, accento giallo segnaletica, Barlow (ispirato ai cartelli autostradali).
- * L'elemento forte sono le targhette numerate (mappa, lista, card): il resto resta sobrio.
+ * Civicor — chiaro e pulito, come le app di percorso che i corrieri conoscono già:
+ * sfondo bianco, fasce grigie per le sezioni, blu per le azioni, carattere di sistema dell'iPhone.
  * Tutto passa dai token qui sotto: niente colori o misure "a mano" nei componenti.
  */
 :root,
@@ -13,10 +12,10 @@
   --line: #313b48;
   --text: #f1f4f8;
   --muted: #9aa5b3;       /* nebbia — 4.9:1 su --surface */
-  --accent: #ffc23d;      /* giallo segnaletica */
-  --accent-ink: #1d1600;
-  --accent-text: #ffc23d;  /* giallo usato come colore del testo */
-  --accent-soft: rgba(255, 194, 61, 0.14);
+  --accent: #4d8dff;      /* blu azione */
+  --accent-ink: #ffffff;
+  --accent-text: #7aaaff;
+  --accent-soft: rgba(77, 141, 255, 0.16);
   --ok: #46d483;
   --ok-soft: rgba(70, 212, 131, 0.14);
   --warn: #ff8a66;        /* da verificare */
@@ -29,26 +28,26 @@
   color-scheme: dark;
 }
 [data-theme='light'] {
-  --bg: #eef1f4;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f2f4f7;
-  --surface-3: #e4e8ee;
-  --line: #d6dbe2;
-  --text: #121820;
-  --muted: #566170;
-  --accent: #ffb81f;
-  --accent-ink: #1d1600;
-  --accent-text: #8a5b00;  /* 5.6:1 su bianco: leggibile anche al sole */
-  --accent-soft: rgba(255, 184, 31, 0.2);
-  --ok: #138a45;
-  --ok-soft: rgba(19, 138, 69, 0.12);
+  --surface-2: #f2f4f7;   /* fasce delle sezioni */
+  --surface-3: #e6e9ee;
+  --line: #e3e6eb;
+  --text: #1b1f24;
+  --muted: #6b7380;
+  --accent: #1f6bff;      /* blu azione */
+  --accent-ink: #ffffff;
+  --accent-text: #1a5fe0;
+  --accent-soft: #e8f0ff;
+  --ok: #128a43;
+  --ok-soft: #e6f5ec;
   --warn: #c2461f;
-  --warn-soft: rgba(194, 70, 31, 0.12);
-  --danger: #c8243a;
-  --danger-soft: rgba(200, 36, 58, 0.1);
-  --scrim: rgba(18, 24, 32, 0.38);
-  --shadow-1: 0 1px 2px rgba(18, 24, 32, 0.08), 0 2px 8px rgba(18, 24, 32, 0.08);
-  --shadow-2: 0 10px 30px rgba(18, 24, 32, 0.18);
+  --warn-soft: #fdeee8;
+  --danger: #d1293d;
+  --danger-soft: #fdeaec;
+  --scrim: rgba(18, 24, 32, 0.32);
+  --shadow-1: 0 1px 2px rgba(18, 24, 32, 0.06), 0 1px 6px rgba(18, 24, 32, 0.06);
+  --shadow-2: 0 6px 24px rgba(18, 24, 32, 0.14);
   color-scheme: light;
 }
 
@@ -76,6 +75,8 @@
   --dur-press: 110ms;
   --dur-move: 220ms;
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Carattere di sistema (San Francisco su iPhone) */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
   /* Bersagli tattili */
   --tap: 48px;
 }
@@ -85,7 +86,7 @@ html, body, #root { height: 100%; margin: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Barlow', -apple-system, system-ui, sans-serif;
+  font-family: var(--font);
   font-size: var(--t-md);
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
@@ -104,7 +105,7 @@ svg { flex: none; }
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-.num { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
@@ -117,12 +118,12 @@ svg { flex: none; }
 .btn-danger,
 .btn-ghost {
   display: flex; align-items: center; justify-content: center; gap: var(--s-2);
-  width: 100%; min-height: 52px; border-radius: var(--r-lg); padding: 0 var(--s-4);
+  width: 100%; min-height: 52px; border-radius: var(--r-md); padding: 0 var(--s-4);
   font-weight: 600; font-size: var(--t-md); text-align: center;
   transition: transform var(--dur-press) ease, filter var(--dur-press) ease, background var(--dur-press) ease;
 }
-.btn-primary { background: var(--accent); color: var(--accent-ink); border: 0; box-shadow: var(--shadow-1); }
-.btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); }
+.btn-primary { background: var(--accent); color: var(--accent-ink); border: 0; }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
 .btn-danger { background: var(--danger-soft); color: var(--danger); border: 1px solid transparent; }
 .btn-ghost { background: none; color: var(--muted); border: 0; min-height: var(--tap); font-weight: 600; }
 .btn-primary:active, .btn-secondary:active, .btn-danger:active, .btn-ghost:active { transform: scale(0.98); filter: brightness(0.94); }
@@ -150,6 +151,7 @@ button.row:active { background: var(--surface-2); }
 .row .grow { flex: 1; min-width: 0; }
 .row .value { color: var(--muted); }
 .row .chev { color: var(--muted); }
+.detail-icon { display: grid; place-items: center; width: 24px; flex: none; color: var(--text); }
 .row-icon {
   width: 34px; height: 34px; border-radius: var(--r-sm); display: grid; place-items: center;
   background: var(--surface-2); color: var(--muted);
@@ -171,27 +173,26 @@ button.row:active { background: var(--surface-2); }
 }
 .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); }
 
-.segmented { display: inline-flex; background: var(--surface-2); border-radius: var(--r-md); padding: 3px; gap: 2px; }
+.segmented { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 3px; gap: 2px; }
 .segmented button {
   border: 0; background: none; min-height: 38px; padding: 0 var(--s-3); border-radius: 9px; color: var(--muted); font-weight: 600;
   transition: background var(--dur-press) ease, color var(--dur-press) ease;
 }
-.segmented button[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); }
+.segmented button[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent-text); }
 
 .section-title {
-  padding: var(--s-5) var(--s-4) var(--s-2); color: var(--muted); font-size: var(--t-sm); font-weight: 600;
+  margin-top: var(--s-3); padding: 10px var(--s-4); background: var(--surface-2); color: var(--muted); font-size: var(--t-sm); font-weight: 500;
 }
 
 /* ---------- Targhetta stile cartello: numero fermata ---------- */
 .plate {
   display: inline-grid; place-items: center; min-width: 34px; height: 30px; padding: 0 6px; border-radius: 7px;
-  background: var(--plate, var(--accent)); color: #14110a; border: 2px solid #14110a;
-  box-shadow: 0 0 0 2px var(--plate, var(--accent));
-  font: 700 17px/1 'Barlow Condensed', sans-serif; font-variant-numeric: tabular-nums;
+  background: var(--plate, var(--accent)); color: #fff; border: 0;
+  font: 700 16px/1 var(--font); font-variant-numeric: tabular-nums;
 }
 .plate.lg { min-width: 46px; height: 40px; font-size: 24px; border-radius: 9px; }
-.plate.done { --plate: var(--surface-3); color: var(--muted); border-color: var(--line); box-shadow: none; }
-.plate.warn { --plate: #ff8a66; } /* stesso arancio nei due temi: il numero nero resta leggibile */
+.plate.done { --plate: var(--surface-3); color: var(--muted); }
+.plate.warn { --plate: #ff8a66; color: #3b1404; } /* stesso arancio nei due temi */
 
 /* ---------- Pillole di stato ---------- */
 .pill {
@@ -211,7 +212,7 @@ button.row:active { background: var(--surface-2); }
 }
 .welcome-mark { display: flex; gap: var(--s-2); margin-bottom: var(--s-2); }
 .welcome-brand {
-  margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 64px; line-height: 0.95; font-weight: 700;
+  margin: 0; font-size: 48px; line-height: 1; font-weight: 700;
   letter-spacing: -0.01em;
 }
 .welcome-text { margin: 0 0 var(--s-5); font-size: var(--t-lg); color: var(--muted); }

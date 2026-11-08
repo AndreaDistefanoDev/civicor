@@ -1,3 +1,4 @@
+import { MapPinPlus, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { withTypedHouseNumber } from '../../domain/address/houseNumber';
 import type { LatLng } from '../../domain/types';
@@ -64,7 +65,8 @@ export function AddressAutocomplete(props: {
 
   return (
     <div className="autocomplete">
-      <div className="field">
+      <div className="search-field">
+        <Search size={20} className="search-field-icon" aria-hidden="true" />
         <input
           aria-label="Cerca indirizzo"
           autoFocus={props.autoFocus}
@@ -74,12 +76,19 @@ export function AddressAutocomplete(props: {
           autoComplete="off"
           onChange={(e) => setText(e.target.value)}
         />
+        {text && (
+          <button className="search-field-clear" aria-label="Cancella" onClick={() => setText('')}>
+            <X size={20} aria-hidden="true" />
+          </button>
+        )}
       </div>
       {error && <p className="autocomplete-error">{error}</p>}
+      {results.length > 0 && <div className="section-title autocomplete-title">Aggiungi una nuova fermata</div>}
       <ul className="autocomplete-list">
         {results.map((s) => (
           <li key={s.placeId ?? `${s.label}-${s.location?.lat}-${s.location?.lng}`}>
             <button className="row" onClick={() => void pick(s)}>
+              <MapPinPlus size={22} className="autocomplete-icon" aria-hidden="true" />
               <span className="grow">
                 <span className="autocomplete-main">{s.address.street}</span>
                 <span className="autocomplete-sub muted">{s.label}</span>

@@ -1,18 +1,18 @@
-import type { CodMethod, FailReason, Stop } from '../domain/types';
-import { getStop, listStops, patchStop, putStop, updateRoute } from './repos';
+import type { FailReason, Stop } from '../domain/types';
+import { getStop, putStop, updateRoute } from './repos';
 
 /** Quello che un esito cambia nella fermata: serve ad Annulla per rimettere tutto com'era. */
-export type OutcomeSnapshot = Pick<Stop, 'outcome' | 'outcomeAt' | 'failReason' | 'attempt' | 'cod'>;
+export type OutcomeSnapshot = Pick<Stop, 'outcome' | 'outcomeAt' | 'failReason' | 'attempt'>;
 
 const snapshot = (s: Stop): OutcomeSnapshot => ({
-  outcome: s.outcome, outcomeAt: s.outcomeAt, failReason: s.failReason, attempt: s.attempt, cod: s.cod,
+  outcome: s.outcome, outcomeAt: s.outcomeAt, failReason: s.failReason, attempt: s.attempt,
 });
 
 /** Segna l'esito subito (sopravvive a una chiusura dell'app) e restituisce lo stato precedente per Annulla. */
 export async function markOutcome(
   stopId: string,
   outcome: 'done' | 'failed',
-  extra: { failReason?: FailReason; attempt?: 1 | 2; codMethod?: CodMethod } = {},
+  extra: { failReason?: FailReason; attempt?: 1 | 2 } = {},
 ): Promise<{ previous: OutcomeSnapshot }> {
   const stop = await getStop(stopId);
   if (!stop) throw new Error('Fermata non trovata');
@@ -23,7 +23,6 @@ export async function markOutcome(
     outcomeAt: Date.now(),
     failReason: failed ? extra.failReason : undefined,
     attempt: failed ? extra.attempt : undefined,
-    cod: stop.cod && { amount: stop.cod.amount, method: failed ? undefined : extra.codMethod },
   });
   return { previous: snapshot(stop) };
 }
@@ -34,15 +33,6 @@ export async function undoOutcome(stopId: string, previous: OutcomeSnapshot): Pr
 }
 
 const order = (s: Stop) => s.sequence ?? s.originalIndex;
-
-/** "Riprova più tardi": la fermata va in fondo, l'ordine delle altre (e del furgone) non cambia. */
-export async function postponeStop(stopId: string): Promise<Pick<Stop, 'sequence' | 'eta'> | undefined> {
-  const stop = await getStop(stopId);
-  if (!stop) return undefined;
-  const last = (await listStops(stop.routeId)).reduce((m, s) => Math.max(m, order(s)), 0);
-  await patchStop(stopId, { sequence: last + 1, eta: undefined });
-  return { sequence: stop.sequence, eta: stop.eta };
-}
 
 /** Le prossime n fermate da fare dopo quella indicata. */
 export function upcomingStops(stops: Stop[], afterId: string, n: number): Stop[] {

@@ -12,34 +12,39 @@ function status(s: Stop) {
   return null;
 }
 
-/** Elenco delle fermate, ordinato per sequenza se ottimizzato, altrimenti per inserimento. */
+const two = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Elenco delle fermate a "linea del tempo": a sinistra numero d'ordine e orario previsto,
+ * al centro indirizzo e città, a destra l'ID della fermata. Prima dell'ottimizzazione al posto del numero c'è un punto.
+ */
 export function StopList(props: { stops: Stop[]; onOpen: (id: string) => void }) {
   const sorted = [...props.stops].sort((a, b) => (a.sequence ?? a.originalIndex) - (b.sequence ?? b.originalIndex));
   return (
     <ol className="stop-list">
-      {sorted.map((s) => {
+      {sorted.map((s, i) => {
         const closed = s.outcome !== 'pending';
-        const uncertain = !closed && (s.geoStatus === 'uncertain' || s.geoStatus === 'failed');
         return (
           <li key={s.id}>
-            <button className={`stop-row${closed ? ' closed' : ''}`} onClick={() => props.onOpen(s.id)}>
-              <span className={`plate${closed ? ' done' : uncertain ? ' warn' : ''}`} aria-label={`ID ${s.displayId}`}>
-                {s.displayId}
+            <button className={`tl-row${closed ? ' closed' : ''}`} onClick={() => props.onOpen(s.id)}>
+              <span className="tl-left">
+                {s.sequence !== undefined ? <span className="tl-num num">{two(i + 1)}</span> : <span className="tl-dot" aria-hidden="true" />}
+                {s.eta && <span className="tl-time num">{s.eta}</span>}
               </span>
               <span className="grow">
-                <span className="stop-row-line">{formatAddressLine(s.address)}</span>
-                <span className="stop-row-city">
+                <span className="tl-title">{formatAddressLine(s.address)}</span>
+                <span className="tl-sub">
                   {s.outcome === 'failed' && s.failReason ? failReasonLabel(s.failReason) : formatAddressCity(s.address)}
                   {s.packages > 1 && (
-                    <span className="stop-row-pkgs">
+                    <span className="tl-pkgs">
                       <Package size={13} aria-hidden="true" /> {s.packages}
                     </span>
                   )}
                 </span>
               </span>
-              <span className="stop-row-end">
-                {s.eta && <span className="stop-row-eta num">{s.eta}</span>}
+              <span className="tl-end">
                 {status(s)}
+                <span className="tl-chip num">ID {s.displayId}</span>
               </span>
             </button>
           </li>

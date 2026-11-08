@@ -9,15 +9,18 @@ export const DEFAULT_SETTINGS: AppSettings = {
   vehicle: 'car',
   avoidTolls: false,
   idMode: 'classic',
-  theme: 'dark',
+  theme: 'auto',
   retentionMonths: 12,
   geocoderProvider: 'osm',
   keepAwake: true,
+  mapProvider: 'google',
+  mapMode: '2d',
+  mapSatellite: false,
 };
 
 const DEFAULT_ROUTE_SETTINGS: RouteSettings = { start: { mode: 'current' }, startTime: 'now', end: { mode: 'return' } };
 
-const STANDARD_TYPE: StopType = { id: 'standard', name: 'Standard', color: '#ffc23d', position: 0, builtIn: true };
+const STANDARD_TYPE: StopType = { id: 'standard', name: 'Standard', color: '#1f6bff', position: 0, builtIn: true };
 
 export const newId = (): string => crypto.randomUUID();
 

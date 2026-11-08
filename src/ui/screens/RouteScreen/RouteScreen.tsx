@@ -1,16 +1,20 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ChevronRight, Coffee, Flag, House, Menu, Plus, ScanLine, type LucideIcon } from 'lucide-react';
+import { Coffee, Flag, House, Map as MapIcon, MapPinPlus, Menu, Mic, ScanLine, Share2, Truck, type LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { applyAddedStops, discardAddedStops } from '../../../data/addedStops';
+import { nextStop } from '../../../data/outcomes';
 import { optimizeRoute, resetDisplayIds, reverseRoute, skipOptimization, type OptimizeStep } from '../../../data/optimizeRoute';
 import { deleteStops, getRoute, getSettings, listStops, listStopTypes, updateRoute } from '../../../data/repos';
 import { unlockAudio } from '../../../device/feedback';
 import { useWakeLock } from '../../../device/wakeLock';
+import { routeShareText } from '../../../domain/share/routeText';
 import type { Route } from '../../../domain/types';
 import { geocodeQueue, optimizeDeps } from '../../appServices';
 import { GeocodeStatusBar } from '../../common/GeocodeStatus';
 import { ConfirmDialog, PickerSheet } from '../../common/ui';
 import { MapView } from '../../map/MapView';
 import { BottomSheet, sheetHeight } from '../../sheet/BottomSheet';
+import { formatDuration } from '../../dates';
 import { useAppState } from '../../useAppState';
 import { Guidance } from './Guidance';
 import { OptimizingModal } from './OptimizingModal';
@@ -19,7 +23,7 @@ import { SearchBar } from './SearchBar';
 import { StopList } from './StopList';
 import './RouteScreen.css';
 
-type Dialog = 'refine' | 'invert' | 'deleteAll' | null;
+type Dialog = 'refine' | 'invert' | 'deleteAll' | 'apply' | 'discard' | null;
 
 function startText(r: Route) {
   return r.settings.start.mode === 'current'
@@ -39,39 +43,33 @@ function breakText(r: Route) {
     : { title: 'Nessuna sosta', sub: 'Tocca per pianificare una sosta' };
 }
 
-function SettingRow(props: { title: string; sub: string; onClick: () => void; icon: LucideIcon }) {
+/** Riga della linea del tempo per partenza, sosta e arrivo: a destra una piccola icona, come le fermate. */
+function TimelineRow(props: { title: string; sub: string; onClick: () => void; icon: LucideIcon; time?: string }) {
   const Icon = props.icon;
   return (
-    <button className="row" onClick={props.onClick}>
-      <span className="row-icon" aria-hidden="true">
-        <Icon size={18} />
+    <button className="tl-row tl-setting" onClick={props.onClick}>
+      <span className="tl-left">
+        <span className="tl-dot" aria-hidden="true" />
+        {props.time && <span className="tl-time num">{props.time}</span>}
       </span>
       <span className="grow">
-        <span className="row-title">{props.title}</span>
-        <span className="row-sub">{props.sub}</span>
+        <span className="tl-title">{props.title}</span>
+        <span className="tl-sub">{props.sub}</span>
       </span>
-      <ChevronRight size={18} className="chev" aria-hidden="true" />
+      <span className="tl-end">
+        <span className="tl-chip icon" aria-hidden="true">
+          <Icon size={15} />
+        </span>
+      </span>
     </button>
   );
 }
 
-/** Tre valori grandi: quando finisci, quante fermate, quanti km. */
-function RouteSummary(props: { endTime?: string; stops: number; km?: number }) {
-  const items: Array<[string, string]> = [
-    ['Fine giro', props.endTime ?? '—'],
-    ['Fermate', String(props.stops)],
-    ['Km', props.km !== undefined ? String(props.km).replace('.', ',') : '—'],
-  ];
-  return (
-    <div className="route-summary" role="group" aria-label="Riepilogo del percorso">
-      {items.map(([label, value]) => (
-        <div key={label} className="route-summary-item">
-          <span className="route-summary-label">{label}</span>
-          <span className="route-summary-value num">{value}</span>
-        </div>
-      ))}
-    </div>
-  );
+/** "Termine: 18:29 · 3 fermate · 3,4 km" sopra il nome del percorso. */
+function routeMeta(r: Route, stops: number): string {
+  const count = `${stops} ${stops === 1 ? 'fermata' : 'fermate'}`;
+  if (!r.totals) return count;
+  return `Termine: ${r.totals.endTime} · ${count} · ${String(r.totals.km).replace('.', ',')} km`;
 }
 
 export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' }) {
@@ -83,6 +81,8 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
   const settings = useLiveQuery(getSettings, []);
   const [notice, setNotice] = useState<'missing' | 'pending' | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
+  // Durante il giro il pannello mostra solo la fermata attuale; con la X si torna all'elenco.
+  const [cardView, setCardView] = useState(true);
 
   // Riprende la ricerca delle posizioni rimaste in sospeso: all'apertura (es. dopo un ricaricamento)
   // e ogni volta che cambiano le chiavi o il motore di ricerca indirizzi.
@@ -98,6 +98,10 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
 
   if (!route || !stops) return null;
   const empty = stops.length === 0;
+  // Fermate aggiunte a un percorso già ottimizzato: aspettano "Applica modifiche".
+  const added = route.status === 'planning' ? [] : stops.filter((s) => s.sequence === undefined);
+  const pendingChanges = !empty && added.length > 0;
+  const guiding = route.status === 'in_progress' && cardView && !pendingChanges && !!nextStop(stops);
   const todo = stops.filter((s) => s.outcome === 'pending');
   const searchingCount = todo.filter((s) => s.geoStatus === 'pending').length;
   const missingCount = todo.filter((s) => s.geoStatus === 'uncertain' || s.geoStatus === 'failed').length;
@@ -111,19 +115,22 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
     if (outcome.kind === 'error') app.showToast(outcome.message);
   };
   const openDetails = () => app.openScreen('routeDetails', { routeId: route.id });
+  // Condividi: con il foglio di condivisione dell'iPhone (WhatsApp, Messaggi…); altrimenti copia il testo.
+  const share = async () => {
+    const text = routeShareText(route.name, route.totals?.endTime, stops);
+    if (navigator.share) {
+      await navigator.share({ title: route.name, text }).catch(() => {});
+    } else {
+      await navigator.clipboard?.writeText(text).catch(() => {});
+      app.showToast('Percorso copiato: incollalo dove vuoi');
+    }
+  };
   const openStop = (id: string) => app.openScreen('stopDetail', { stopId: id });
   const scan = () => {
     unlockAudio();
     app.openScreen('scan', { routeId: route.id });
   };
 
-  const statusLabel: Record<Route['status'], string> = {
-    planning: 'Da ottimizzare',
-    optimized: 'Ottimizzato',
-    confirmed: 'Pronto a partire',
-    in_progress: 'In corso',
-    completed: 'Completato',
-  };
 
   return (
     <div className="route-screen">
@@ -133,25 +140,26 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
         polyline={route.polyline}
         theme={props.theme}
         bottomInset={sheetHeight(app.sheet)}
+        selectedStopId={route.status === 'in_progress' ? nextStop(stops)?.id : undefined}
+        finishTime={route.status === 'in_progress' ? route.totals?.endTime : undefined}
         onSelectStop={openStop}
       />
       <button className="icon-btn floating menu-btn" aria-label="Menu" onClick={() => app.openScreen('drawer')}>
         <Menu size={20} aria-hidden="true" />
       </button>
       <BottomSheet snap={app.sheet} onSnapChange={app.setSheet}>
-        <SearchBar
-          onSearch={() => app.openScreen('search', { routeId: route.id })}
-          onScan={scan}
-          onVoice={() => app.openScreen('voice', { routeId: route.id })}
-        />
+        {!guiding && (
+          <SearchBar
+            onSearch={() => app.openScreen('search', { routeId: route.id })}
+            onScan={scan}
+            onVoice={() => app.openScreen('voice', { routeId: route.id })}
+          />
+        )}
+        {!guiding && (
         <div className="route-head">
           <div className="grow">
+            {!empty && <div className="route-meta">{routeMeta(route, stops.length)}</div>}
             <h2 className="route-name">{route.name}</h2>
-            {!empty && (
-              <span className={`pill ${route.status === 'in_progress' ? 'accent' : route.status === 'completed' ? 'ok' : ''}`}>
-                {statusLabel[route.status]}
-              </span>
-            )}
           </div>
           {!empty && (
             <RouteMenu
@@ -164,6 +172,19 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
             />
           )}
         </div>
+        )}
+        {!guiding && !pendingChanges && (route.status === 'confirmed' || route.status === 'in_progress') && (
+          <div className="route-chips">
+            <button className="chip-btn" onClick={() => void share()}>
+              <Share2 size={16} aria-hidden="true" />
+              Condividi percorso
+            </button>
+            <button className="chip-btn" onClick={() => app.openScreen('loadVehicle', { routeId: route.id })}>
+              <Truck size={16} aria-hidden="true" />
+              Carica veicolo
+            </button>
+          </div>
+        )}
 
         <GeocodeStatusBar onOpenSettings={() => app.openScreen('settings')} />
         {notice === 'missing' && missingCount > 0 && (
@@ -182,27 +203,48 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
 
         {empty && (
           <div className="route-empty">
+            <MapPinPlus size={30} className="route-empty-icon" aria-hidden="true" />
             <p>Aggiungi le prime fermate e inizia a creare un percorso</p>
-            <button className="btn-primary" onClick={scan}>
-              <ScanLine size={20} aria-hidden="true" />
-              Scansiona etichette
-            </button>
-            <button className="btn-secondary" onClick={() => app.openScreen('search', { routeId: route.id })}>
-              <Plus size={20} aria-hidden="true" />
-              Aggiungi fermata
-            </button>
+            <div className="add-tiles">
+              <button className="add-tile" onClick={() => app.openScreen('pickOnMap', { routeId: route.id })}>
+                <MapIcon size={22} aria-hidden="true" />
+                Mappa
+              </button>
+              <button className="add-tile" onClick={scan}>
+                <ScanLine size={22} aria-hidden="true" />
+                Scansiona
+              </button>
+              <button className="add-tile" onClick={() => app.openScreen('voice', { routeId: route.id })}>
+                <Mic size={22} aria-hidden="true" />
+                Voce
+              </button>
+            </div>
           </div>
         )}
 
-        {!empty && route.status === 'planning' && (
+        {pendingChanges && (
           <>
-            <RouteSummary stops={stops.length} />
-            <div className="section-title">Impostazione percorso</div>
-            <div className="card">
-              <SettingRow icon={House} {...startText(route)} onClick={openDetails} />
-              <SettingRow icon={Flag} {...endText(route)} onClick={openDetails} />
+            <div className="section-title">Fermate aggiunte</div>
+            <StopList stops={added} onOpen={openStop} />
+            <div className="section-title">Percorso esistente</div>
+            <StopList stops={stops.filter((s) => s.sequence !== undefined)} onOpen={openStop} />
+            <div className="sheet-actions two">
+              <button className="btn-secondary" onClick={() => setDialog('discard')}>
+                Elimina
+              </button>
+              <button className="btn-primary" onClick={() => setDialog('apply')}>
+                Applica modifiche ({added.length})
+              </button>
             </div>
-            <div className="section-title">Fermate</div>
+          </>
+        )}
+
+        {!empty && !pendingChanges && route.status === 'planning' && (
+          <>
+            <div className="section-title">Impostazione percorso</div>
+            <TimelineRow icon={House} {...startText(route)} onClick={openDetails} />
+            <TimelineRow icon={Flag} {...endText(route)} onClick={openDetails} />
+            <div className="section-title">Fermate aggiunte</div>
             <StopList stops={stops} onOpen={openStop} />
             <div className="sheet-actions">
               <button className="btn-primary" onClick={optimize}>
@@ -212,19 +254,14 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
           </>
         )}
 
-        {!empty && route.status === 'optimized' && (
+        {!empty && !pendingChanges && route.status === 'optimized' && (
           <>
-            <RouteSummary endTime={route.totals?.endTime} stops={stops.length} km={route.totals?.km} />
-            <div className="card route-settings-card">
-              <SettingRow icon={Coffee} {...breakText(route)} onClick={openDetails} />
-              <SettingRow icon={House} title="Posizione iniziale" sub={startText(route).sub} onClick={openDetails} />
-            </div>
-            <div className="section-title">Ordine delle fermate</div>
+            <TimelineRow icon={Coffee} {...breakText(route)} onClick={openDetails} />
+            <TimelineRow icon={House} title="Posizione iniziale" sub={startText(route).sub} onClick={openDetails} />
             <StopList stops={stops} onOpen={openStop} />
-            <div className="card route-settings-card">
-              <SettingRow icon={Flag} {...endText(route)} onClick={openDetails} />
-            </div>
-            <div className="sheet-actions two">
+            <TimelineRow icon={Flag} {...endText(route)} time={route.totals?.endTime} onClick={openDetails} />
+            <div className="sheet-actions three">
+              {route.totals && <span className="route-duration num">{formatDuration(route.totals.minutes)}</span>}
               <button className="btn-secondary" onClick={() => setDialog('refine')}>
                 Perfeziona
               </button>
@@ -235,8 +272,14 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
           </>
         )}
 
-        {!empty && route.status !== 'planning' && route.status !== 'optimized' && (
-          <Guidance route={route} stops={stops} />
+        {!empty && !pendingChanges && route.status !== 'planning' && route.status !== 'optimized' && (
+          <Guidance
+            route={route}
+            stops={stops}
+            view={guiding ? 'card' : 'list'}
+            onCloseCard={() => setCardView(false)}
+            onShowCard={route.status === 'in_progress' && nextStop(stops) ? () => setCardView(true) : undefined}
+          />
         )}
       </BottomSheet>
 
@@ -250,6 +293,47 @@ export function RouteScreen(props: { routeId: string; theme: 'dark' | 'light' })
             </span>
           </button>
         </PickerSheet>
+      )}
+      {dialog === 'apply' && (
+        <PickerSheet title={`Applica modifiche (${added.length})`} onCancel={() => setDialog(null)} onDone={() => setDialog(null)}>
+          <button
+            className="row"
+            onClick={async () => {
+              setDialog(null);
+              await applyAddedStops(route.id);
+            }}
+          >
+            <span className="grow">
+              <span className="row-title">Aggiorna percorso</span>
+              <span className="row-sub">Riordina solo le fermate modificate</span>
+            </span>
+          </button>
+          <button
+            className="row"
+            onClick={() => {
+              setDialog(null);
+              void optimize();
+            }}
+          >
+            <span className="grow">
+              <span className="row-title">Riottimizza percorso</span>
+              <span className="row-sub">Riordina tutte le fermate per un'efficienza ottimale</span>
+            </span>
+          </button>
+        </PickerSheet>
+      )}
+      {dialog === 'discard' && (
+        <ConfirmDialog
+          title="Eliminare le fermate aggiunte?"
+          message={`${added.length} ${added.length === 1 ? 'fermata non è ancora' : 'fermate non sono ancora'} nel percorso.`}
+          confirmLabel="Elimina fermate aggiunte"
+          danger
+          onCancel={() => setDialog(null)}
+          onConfirm={async () => {
+            setDialog(null);
+            await discardAddedStops(route.id);
+          }}
+        />
       )}
       {dialog === 'invert' && (
         <ConfirmDialog

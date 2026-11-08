@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "types": ["node", "vite/client", "vitest/globals", "@testing-library/jest-dom"]
+    "types": ["node", "vite/client", "vitest/globals", "@testing-library/jest-dom", "google.maps"]
   },
   "include": ["src", "vitest.setup.ts", "vite.config.ts"]
 }

@@ -9,7 +9,7 @@ beforeEach(async () => {
   await db.open();
 });
 
-const props = { today: '2026-10-20', onOpenRoute: vi.fn(), onCreateRoute: vi.fn(), onOpenSettings: vi.fn(), onClose: vi.fn() };
+const props = { today: '2026-10-20', onOpenRoute: vi.fn(), onCreateRoute: vi.fn(), onOpenSettings: vi.fn(), onOpenStats: vi.fn(), onClose: vi.fn() };
 
 it('raggruppa i percorsi in Oggi, Questo mese e mesi precedenti', async () => {
   await createRoute({ date: '2026-10-20' });
@@ -38,4 +38,10 @@ it('+ Crea percorso chiama onCreateRoute', async () => {
   render(<Drawer {...props} />);
   await userEvent.click(screen.getByRole('button', { name: 'Crea percorso' }));
   expect(props.onCreateRoute).toHaveBeenCalled();
+});
+
+it('I miei numeri apre le statistiche', async () => {
+  render(<Drawer {...props} />);
+  await userEvent.click(screen.getByRole('button', { name: /I miei numeri/ }));
+  expect(props.onOpenStats).toHaveBeenCalled();
 });

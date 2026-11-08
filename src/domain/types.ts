@@ -10,7 +10,6 @@ export type StopKind = 'delivery' | 'pickup';
 export type StopOutcome = 'pending' | 'done' | 'failed';
 /** Perché una consegna non è riuscita (GLS: due tentativi, poi giacenza). */
 export type FailReason = 'not_home' | 'refused' | 'wrong_address' | 'no_access' | 'parcel_shop' | 'other';
-export type CodMethod = 'cash' | 'pos';
 export type PackageSize = 'small' | 'medium' | 'large' | 'box' | 'bag' | 'letter';
 export type VehiclePosition = 'front' | 'middle' | 'back' | 'left' | 'right' | 'floor' | 'shelf';
 /** Orari nel formato 'HH:mm'. */
@@ -45,8 +44,6 @@ export interface Stop {
   attempt?: 1 | 2;
   /** Telefono del destinatario, solo cifre (es. 3331234567). */
   phone?: string;
-  /** Contrassegno: importo da incassare e, a consegna fatta, come è stato pagato. */
-  cod?: { amount: number; method?: CodMethod };
   createdAt: number;
 }
 
@@ -101,6 +98,12 @@ export interface AppSettings {
   geocoderProvider: 'google' | 'osm';
   googleApiKey?: string;
   retentionMonths: number | null;
+  /** Mappa di sfondo: Google (serve la chiave Google) o OpenStreetMap. */
+  mapProvider: 'google' | 'osm';
+  /** Mappa piatta o inclinata con gli edifici in rilievo. */
+  mapMode: '2d' | '3d';
+  /** Vista satellite (solo con la mappa Google). */
+  mapSatellite: boolean;
   /** Tiene lo schermo acceso mentre il giro è aperto. */
   keepAwake: boolean;
   /** Ultima copia di sicurezza esportata (ms). */

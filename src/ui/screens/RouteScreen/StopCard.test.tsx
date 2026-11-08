@@ -31,9 +31,7 @@ beforeEach(async () => {
 it('la card mostra la fermata corrente con posizione e orario', async () => {
   renderScreen(routeId);
   expect(await screen.findByRole('heading', { name: 'Via Prima, 1' })).toBeInTheDocument();
-  expect(screen.getByText('Fermata 1 di 2')).toBeInTheDocument();
-  expect(within(screen.getByRole('region', { name: 'Fermata attuale' })).getByText('08:10')).toBeInTheDocument();
-  expect(screen.getByRole('progressbar', { name: 'Avanzamento del giro' })).toHaveAttribute('aria-valuenow', '0');
+  expect(within(screen.getByRole('region', { name: 'Fermata attuale' })).getByText('1/2 · 08:10')).toBeInTheDocument();
 });
 
 it('Effettuata salva subito e offre Annulla', async () => {
@@ -67,32 +65,12 @@ it('la posizione del pacco nel furgone si vede in grande, con i prossimi pacchi'
   expect(within(card).getByText('Ripiano')).toBeInTheDocument();
 });
 
-it('contrassegno: Effettuata chiede come ha pagato e lo registra', async () => {
-  await db.stops.update('a', { cod: { amount: 25 } });
-  renderScreen(routeId);
-  expect(await screen.findByText('Contrassegno 25,00 €')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Effettuata' }));
-  const sheet = await screen.findByRole('dialog', { name: 'Contrassegno 25,00 €' });
-  await userEvent.click(within(sheet).getByRole('button', { name: 'POS' }));
-  await waitFor(async () => expect((await getStop('a'))?.cod).toEqual({ amount: 25, method: 'pos' }));
-});
-
 it('con il telefono: Chiama, SMS e WhatsApp con il messaggio già scritto', async () => {
   await db.stops.update('a', { phone: '3331234567' });
   renderScreen(routeId);
   expect(await screen.findByRole('link', { name: 'Chiama' })).toHaveAttribute('href', 'tel:+393331234567');
   expect(screen.getByRole('link', { name: 'SMS' }).getAttribute('href')).toMatch(/^sms:\+393331234567&body=/);
   expect(screen.getByRole('link', { name: 'WhatsApp' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/393331234567\?text=/);
-});
-
-it('Riprova più tardi manda la fermata in fondo e offre Annulla', async () => {
-  const app = renderScreen(routeId);
-  await userEvent.click(await screen.findByRole('button', { name: /Riprova più tardi/ }));
-  expect(await screen.findByRole('heading', { name: 'Via Seconda, 2' })).toBeInTheDocument();
-  expect((await getStop('a'))?.sequence).toBe(2);
-  const action = vi.mocked(app.showToast).mock.calls[0][1]!;
-  action.onPress();
-  await waitFor(async () => expect((await getStop('a'))?.sequence).toBe(0));
 });
 
 it('Naviga apre l\'app scelta nelle Impostazioni', async () => {
@@ -115,8 +93,8 @@ it('dopo l\'ultima fermata mostra il riepilogo del percorso completato', async (
   expect(await screen.findByText('Percorso completato!')).toBeInTheDocument();
   expect(screen.getByText('Rifiutato: 1')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Salva copia di sicurezza/ })).toBeInTheDocument();
-  expect(screen.getByText('1 fermate')).toBeInTheDocument();
-  expect(screen.getByText('1 fermate mancate')).toBeInTheDocument();
+  expect(screen.getByText('1 fermata')).toBeInTheDocument();
+  expect(screen.getByText('1 fermata mancata')).toBeInTheDocument();
 });
 
 it('percorso confermato: Avvia percorso', async () => {
@@ -124,4 +102,13 @@ it('percorso confermato: Avvia percorso', async () => {
   renderScreen(routeId);
   await userEvent.click(await screen.findByRole('button', { name: 'Avvia percorso' }));
   await waitFor(async () => expect((await db.routes.get(routeId))?.status).toBe('in_progress'));
+});
+
+it('con la X si passa all\'elenco del percorso e si torna alla fermata attuale', async () => {
+  renderScreen(routeId);
+  await userEvent.click(await screen.findByRole('button', { name: 'Chiudi scheda' }));
+  expect(screen.queryByRole('region', { name: 'Fermata attuale' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Via Seconda, 2/ })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Torna alla fermata attuale' }));
+  expect(await screen.findByRole('region', { name: 'Fermata attuale' })).toBeInTheDocument();
 });

@@ -13,7 +13,7 @@
   padding-top: env(safe-area-inset-top);
 }
 .screen-head { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-2) var(--s-3) var(--s-1); min-height: 60px; }
-.screen-head h1 { flex: 1; margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: var(--t-xl); font-weight: 700; line-height: 1.1; }
+.screen-head h1 { flex: 1; margin: 0; font-family: var(--font); font-size: var(--t-xl); font-weight: 700; line-height: 1.1; }
 .screen-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .screen-foot { padding: var(--s-3) var(--s-4) calc(env(safe-area-inset-bottom) + var(--s-3)); border-top: 1px solid var(--line); background: var(--bg); }
 
@@ -60,9 +60,23 @@
   margin: var(--s-3) var(--s-4) 0; padding: var(--s-2) var(--s-3); border-radius: var(--r-md); background: var(--surface-2); font-size: var(--t-sm);
 }
 .geo-status.error { color: var(--warn); background: var(--warn-soft); font-weight: 600; }
+/* Ricerca indirizzo: campo arrotondato con bordo blu quando attivo, risultati con l'icona del segnaposto. */
+.search-field {
+  position: relative; display: flex; align-items: center; margin: var(--s-2) var(--s-4) var(--s-3);
+  border: 1.5px solid var(--line); border-radius: var(--r-md); background: var(--surface-2);
+  transition: border-color var(--dur-press) ease, background var(--dur-press) ease;
+}
+.search-field:focus-within { border-color: var(--accent); background: var(--surface); }
+.search-field-icon { margin-left: 12px; color: var(--muted); }
+.search-field input { flex: 1; min-width: 0; min-height: 48px; border: 0; background: none; padding: 0 10px; font-size: var(--t-md); }
+.search-field input:focus { outline: none; }
+.search-field-clear { width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--muted); }
+.autocomplete-title { margin-top: 0; }
 .autocomplete-list { list-style: none; margin: 0; padding: 0; }
-.autocomplete-main { display: block; font-weight: 600; }
-.autocomplete-sub { display: block; font-size: 14px; }
+.autocomplete-list .row { align-items: flex-start; padding-top: 12px; padding-bottom: 12px; }
+.autocomplete-icon { margin-top: 2px; color: var(--muted); flex: none; }
+.autocomplete-main { display: block; font-weight: 500; font-size: var(--t-md); }
+.autocomplete-sub { display: block; font-size: var(--t-sm); color: var(--muted); }
 .autocomplete-error { margin: 0 16px 8px; color: var(--warn); }
 .autocomplete-warn { display: block; font-size: 13px; color: var(--warn); font-weight: 600; }
 .autocomplete-dist { color: var(--muted); font-size: 16px; white-space: nowrap; }

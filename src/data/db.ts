@@ -34,6 +34,8 @@ export class CivicorDB extends Dexie {
       settings: 'id',
       unreadableCodes: '++id, createdAt',
     });
+    // v2: indice sull'esito, per ritrovare subito le consegne mancate allo stesso indirizzo. I dati restano com'erano.
+    this.version(2).stores({ stops: 'id, routeId, [routeId+originalIndex], outcome' });
   }
 }
 

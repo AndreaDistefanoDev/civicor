@@ -1,9 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import {
+  AlertTriangle, ArrowDownToLine, Check, ChevronRight, Clock, CopyPlus, Layers, ListOrdered, Loader2, MapPinned,
+  PackageSearch, Phone, Plus, ScanBarcode, Timer, Trash2, User,
+} from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { duplicateStop, removeStop, updateStop } from '../../../data/stopOps';
 import { getStop, listStopTypes } from '../../../data/repos';
 import { formatAddressCity, formatAddressLine } from '../../../domain/address/normalize';
-import { formatEuro, parseEuro } from '../../../domain/cod/cod';
 import { normalizePhone } from '../../../domain/contact/phone';
 import type { Stop, StopKind, StopOrder } from '../../../domain/types';
 import { ConfirmDialog, PickerSheet, Screen } from '../../common/ui';
@@ -28,6 +31,7 @@ function Segmented<T extends string>(props: { value: T; options: Array<[T, strin
 function Row(props: { icon?: ReactNode; label: string; value?: ReactNode; onClick?: () => void; children?: ReactNode }) {
   const content = (
     <>
+      {props.icon && <span className="detail-icon" aria-hidden="true">{props.icon}</span>}
       <span className="grow">{props.label}</span>
       {props.value !== undefined && <span className="value">{props.value}</span>}
       {props.children}
@@ -70,15 +74,32 @@ export function StopDetail(props: {
       {props.onAddNext && (
         <div className="add-next">
           <button className="btn-primary" onClick={props.onAddNext}>
-            + Aggiungi prossima fermata
+            <Plus size={20} aria-hidden="true" />
+            Aggiungi prossima fermata
           </button>
         </div>
       )}
       <div className="stop-head">
-        <div className="stop-head-id muted">ID {stop.displayId}</div>
+        <div className="stop-head-top">
+          <span className="stop-head-id">ID {stop.displayId}</span>
+          {stop.geoStatus === 'ok' && (
+            <span className="stop-head-status">
+              Posizione trovata <Check size={15} aria-hidden="true" />
+            </span>
+          )}
+          {stop.geoStatus === 'pending' && (
+            <span className="stop-head-status">
+              Ricerca posizione <Loader2 size={15} className="spin" aria-hidden="true" />
+            </span>
+          )}
+        </div>
         <h2 className="stop-head-line">{formatAddressLine(stop.address)}</h2>
-        <div className="muted">{formatAddressCity(stop.address)}</div>
-        {stop.geoReason && <div className="stop-head-warn">▲ {stop.geoReason}</div>}
+        <div className="stop-head-city">{formatAddressCity(stop.address)}</div>
+        {stop.geoReason && (
+          <div className="stop-head-warn">
+            <AlertTriangle size={16} aria-hidden="true" /> {stop.geoReason}
+          </div>
+        )}
       </div>
 
       <div className="type-chips" role="group" aria-label="Tipo di fermata">
@@ -93,8 +114,8 @@ export function StopDetail(props: {
         </button>
       </div>
 
-      <label className="field notes">
-        <span>Note</span>
+      <label className="notes-row">
+        <span className="sr-only">Note</span>
         <textarea
           rows={2}
           placeholder="Aggiungi note"
@@ -108,37 +129,25 @@ export function StopDetail(props: {
           <div>{stop.senderNotes}</div>
         </div>
       )}
-      {stop.recipient && <Row label="Destinatario" value={stop.recipient} />}
-      <div className="detail-fields">
-        <label className="field">
-          <span>Telefono</span>
+      {stop.recipient && <Row icon={<User size={20} />} label="Destinatario" value={stop.recipient} />}
+      <div className="detail-inputs">
+        <label className="row">
+          <span className="detail-icon" aria-hidden="true"><Phone size={20} /></span>
+          <span className="grow">Telefono</span>
           <input
+            className="row-input"
             key={`phone-${stop.phone ?? ''}`}
             type="tel"
             inputMode="tel"
             autoComplete="off"
-            placeholder="Es. 333 123 4567"
+            placeholder="Aggiungi"
             defaultValue={stop.phone ?? ''}
             onBlur={(e) => save({ phone: normalizePhone(e.target.value) })}
           />
         </label>
-        <label className="field">
-          <span>Contrassegno (€)</span>
-          <input
-            key={`cod-${stop.cod?.amount ?? ''}`}
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="Nessuno"
-            defaultValue={stop.cod ? formatEuro(stop.cod.amount).replace(' €', '') : ''}
-            onBlur={(e) => {
-              const amount = parseEuro(e.target.value);
-              save({ cod: amount ? { amount, method: stop.cod?.method } : undefined });
-            }}
-          />
-        </label>
       </div>
       {stop.trackingNumbers.length > 0 && (
-        <Row label={stop.trackingNumbers.length > 1 ? 'Spedizioni' : 'Spedizione'}>
+        <Row icon={<ScanBarcode size={20} />} label={stop.trackingNumbers.length > 1 ? 'Spedizioni' : 'Spedizione'}>
           <span className="value num tracking">
             {stop.trackingNumbers.map((t) => (
               <span key={t}>{t}</span>
@@ -147,8 +156,8 @@ export function StopDetail(props: {
         </Row>
       )}
 
-      <Row label="Trova il pacco" value={describeFindPackage(stop.findPackage)} onClick={() => setSheet('findPackage')} />
-      <Row label="Pacchi">
+      <Row icon={<PackageSearch size={20} />} label="Trova il pacco" value={describeFindPackage(stop.findPackage)} onClick={() => setSheet('findPackage')} />
+      <Row icon={<Layers size={20} />} label="Pacchi">
         <div className="stepper">
           <button aria-label="Un pacco in meno" disabled={stop.packages <= 1} onClick={() => save({ packages: stop.packages - 1 })}>
             −
@@ -159,7 +168,7 @@ export function StopDetail(props: {
           </button>
         </div>
       </Row>
-      <Row label="Ordine">
+      <Row icon={<ListOrdered size={20} />} label="Ordine">
         <Segmented<StopOrder>
           label="Ordine"
           value={stop.order}
@@ -167,7 +176,7 @@ export function StopDetail(props: {
           onChange={(order) => save({ order })}
         />
       </Row>
-      <Row label="Tipo">
+      <Row icon={<ArrowDownToLine size={20} />} label="Tipo">
         <Segmented<StopKind>
           label="Tipo"
           value={stop.kind}
@@ -176,11 +185,13 @@ export function StopDetail(props: {
         />
       </Row>
       <Row
+        icon={<Clock size={20} />}
         label="Orario di arrivo"
         value={stop.timeWindows.length ? stop.timeWindows.map((w) => `${w.start}–${w.end}`).join(', ') : 'Qualsiasi orario'}
         onClick={() => setSheet('window')}
       />
       <Row
+        icon={<Timer size={20} />}
         label="Tempo stimato alla fermata"
         value={formatService(stop.serviceMinutes)}
         onClick={() => {
@@ -192,13 +203,19 @@ export function StopDetail(props: {
 
       <div className="stop-actions">
         <button className="row" onClick={() => props.onChangeAddress(stop.id)}>
-          Cambia indirizzo
+          <span className="detail-icon" aria-hidden="true"><MapPinned size={20} /></span>
+          <span className="grow">Cambia indirizzo</span>
+          <ChevronRight size={18} className="chev" aria-hidden="true" />
         </button>
         <button className="row" onClick={() => void duplicateStop(stop.id)}>
-          Duplica fermata
+          <span className="detail-icon" aria-hidden="true"><CopyPlus size={20} /></span>
+          <span className="grow">Duplica fermata</span>
+          <ChevronRight size={18} className="chev" aria-hidden="true" />
         </button>
         <button className="row danger-row" onClick={() => setSheet('remove')}>
-          Rimuovi fermata
+          <span className="detail-icon" aria-hidden="true"><Trash2 size={20} /></span>
+          <span className="grow">Rimuovi fermata</span>
+          <ChevronRight size={18} className="chev" aria-hidden="true" />
         </button>
       </div>
 

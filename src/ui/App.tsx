@@ -16,6 +16,8 @@ import { RouteScreen } from './screens/RouteScreen/RouteScreen';
 import { StopDetail } from './screens/StopDetail/StopDetail';
 import { RouteDetails } from './screens/RouteDetails/RouteDetails';
 import { Settings } from './screens/Settings/Settings';
+import { Stats } from './screens/Stats/Stats';
+import { LoadVehicle } from './screens/LoadVehicle/LoadVehicle';
 import { ScanScreen } from './screens/Scan/ScanScreen';
 import { VerifyScreen } from './screens/Verify/VerifyScreen';
 import { AddressSearch } from './screens/AddStop/AddressSearch';
@@ -124,8 +126,15 @@ export default function App() {
           onOpenRoute={openRoute}
           onCreateRoute={() => openScreen('createRoute')}
           onOpenSettings={() => openScreen('settings')}
+          onOpenStats={() => openScreen('stats')}
           onClose={closeScreen}
         />
+      )}
+      {screen?.name === 'loadVehicle' && screen.params?.routeId && (
+        <LoadVehicle routeId={screen.params.routeId} onClose={closeScreen} />
+      )}
+      {screen?.name === 'stats' && (
+        <Stats month={today.slice(0, 7)} currentMonth={today.slice(0, 7)} today={today} onOpenRoute={openRoute} onClose={closeScreen} />
       )}
       {screen?.name === 'createRoute' && <CreateRoute today={today} onCreated={openRoute} onClose={closeScreen} />}
 
