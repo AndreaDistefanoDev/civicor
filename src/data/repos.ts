@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 const DEFAULT_ROUTE_SETTINGS: RouteSettings = { start: { mode: 'current' }, startTime: 'now', end: { mode: 'return' } };
 
-const STANDARD_TYPE: StopType = { id: 'standard', name: 'Standard', color: '#1f6bff', position: 0, builtIn: true };
+const STANDARD_TYPE: StopType = { id: 'standard', name: 'Standard', color: '#0e7490', position: 0, builtIn: true };
 
 export const newId = (): string => crypto.randomUUID();
 
@@ -141,7 +141,10 @@ export async function saveSettings(patch: Partial<AppSettings>): Promise<void> {
 
 /** Sola lettura (usabile nelle query reattive): "Standard" c'è sempre, anche se non ancora salvato. */
 export async function listStopTypes(): Promise<StopType[]> {
-  const types = await db.stopTypes.orderBy('position').toArray();
+  // Lo standard non si modifica: prende sempre il colore dell'app (nel telefono può esserci il vecchio blu).
+  const types = (await db.stopTypes.orderBy('position').toArray()).map((t) =>
+    t.id === STANDARD_TYPE.id ? { ...t, color: STANDARD_TYPE.color } : t,
+  );
   return types.some((t) => t.id === STANDARD_TYPE.id) ? types : [STANDARD_TYPE, ...types];
 }
 

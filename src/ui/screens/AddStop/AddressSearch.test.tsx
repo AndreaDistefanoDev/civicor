@@ -133,3 +133,51 @@ it('con Google, scelto un suggerimento ne legge la posizione prima di aggiungerl
   expect((await listStops('r1'))[0]).toMatchObject({ location: { lat: 36.93, lng: 14.72 }, geoStatus: 'ok',
     address: { street: 'Via Roma, 20', postcode: '97100' } });
 });
+
+it('mostra prima le fermate già nel giro che corrispondono ("In questo percorso") e le apre', async () => {
+  await putStop(makeStop({ id: 'a', routeId: 'r1', sequence: 0, eta: '12:29', displayId: 13, address: { street: 'Via Roma, 165', city: 'Ragusa' } }));
+  await putStop(makeStop({ id: 'b', routeId: 'r1', sequence: 1, originalIndex: 1, displayId: 14, address: { street: 'Corso Italia, 4', city: 'Ragusa' } }));
+  const onOpenStop = vi.fn();
+  render(<AddressSearch routeId="r1" geocoder={geocoder} onClose={vi.fn()} onPickOnMap={vi.fn()} onPaste={vi.fn()} onOpenStop={onOpenStop} />);
+  await userEvent.type(screen.getByLabelText('Cerca indirizzo'), 'via roma');
+  expect(await screen.findByText('In questo percorso (1)')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /Via Roma, 165/ }));
+  expect(onOpenStop).toHaveBeenCalledWith('a');
+  expect(await screen.findByText('Aggiungi una nuova fermata')).toBeInTheDocument();
+});
+
+it('suggerimento con la freccia: completa il nome della via nel campo', async () => {
+  vi.mocked(geocoder.autocomplete).mockResolvedValueOnce([
+    { label: 'Via Romania, Ragusa', precision: 'street' as const, address: { street: 'Via Romania', city: 'Ragusa' }, location: { lat: 36.9, lng: 14.7 } },
+  ]);
+  render(<AddressSearch routeId="r1" geocoder={geocoder} onClose={vi.fn()} onPickOnMap={vi.fn()} onPaste={vi.fn()} />);
+  await userEvent.type(screen.getByLabelText('Cerca indirizzo'), 'via roma');
+  await userEvent.click(await screen.findByRole('button', { name: 'Completa: Via Romania' }));
+  expect(screen.getByLabelText('Cerca indirizzo')).toHaveValue('Via Romania ');
+});
+
+it('voce: dopo una fermata aggiunta lo dice e si rimette in ascolto da sola', async () => {
+  const started: FakeRecognition[] = [];
+  class FakeRecognition {
+    lang = ''; continuous = false; interimResults = false;
+    onresult: ((e: unknown) => void) | null = null; onend: (() => void) | null = null; onerror: (() => void) | null = null;
+    start() { started.push(this); }
+    stop() { this.onend?.(); }
+    say(text: string) {
+      this.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: text }], { isFinal: true })] });
+      this.onend?.();
+    }
+  }
+  vi.stubGlobal('webkitSpeechRecognition', FakeRecognition);
+  render(<VoiceInput routeId="r1" geocoder={geocoder} onClose={vi.fn()} />);
+  await userEvent.click(screen.getByRole('button', { name: 'Inizia ascolto' }));
+  act(() => started[0].say('via roma 20 ragusa'));
+  expect(await screen.findByText("Fermata aggiunta! Parla per aggiungerne un'altra")).toBeInTheDocument();
+  await waitFor(() => expect(started).toHaveLength(2));
+  expect(await listStops('r1')).toHaveLength(1);
+  // Toccando il cerchio si smette di ascoltare e non riparte.
+  await userEvent.click(screen.getByRole('button', { name: 'Ferma ascolto' }));
+  await new Promise((r) => setTimeout(r, 50));
+  expect(started).toHaveLength(2);
+  vi.unstubAllGlobals();
+});

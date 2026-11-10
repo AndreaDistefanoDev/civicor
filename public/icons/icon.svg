@@ -1,5 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0f1115"/>
-  <path d="M256 92c-70 0-126 55-126 124 0 92 126 204 126 204s126-112 126-204c0-69-56-124-126-124z" fill="#2fd4a7"/>
-  <path d="M297 190a50 50 0 1 0 0 52" fill="none" stroke="#0f1115" stroke-width="30" stroke-linecap="round"/>
+  <!-- Icona Civicor: furgone di consegna in ottanio su asfalto, con un pacco sul fianco e il giro a puntini sotto. -->
+  <defs>
+    <radialGradient id="sfondo" cx="0.5" cy="0.45" r="0.65">
+      <stop offset="0" stop-color="#1c2b35"/>
+      <stop offset="1" stop-color="#11151b"/>
+    </radialGradient>
+    <linearGradient id="carrozzeria" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3bb8d6"/>
+      <stop offset="0.5" stop-color="#1b8fae"/>
+      <stop offset="0.8" stop-color="#16809d"/>
+      <stop offset="0.8" stop-color="#0f6782"/>
+      <stop offset="1" stop-color="#0d5e77"/>
+    </linearGradient>
+    <linearGradient id="vetro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#33414f"/>
+      <stop offset="1" stop-color="#11151b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#sfondo)"/>
+
+  <!-- Il giro: puntini sulla strada, con la partenza a sinistra -->
+  <path d="M66 414H478" stroke="#1b8fae" stroke-width="9" stroke-linecap="round" stroke-dasharray="0.1 22" opacity="0.55"/>
+  <circle cx="44" cy="414" r="12" fill="none" stroke="#1b8fae" stroke-width="6"/>
+
+  <g transform="translate(256 262) scale(1.1) translate(-265 -264)">
+    <!-- Ombra -->
+    <ellipse cx="262" cy="390" rx="180" ry="8" fill="#05070a" opacity="0.75"/>
+    <!-- Carrozzeria: tetto alto, parabrezza inclinato, cofano corto -->
+    <path d="M100 140H334Q352 140 362 155L402 220Q408 230 420 236L434 243Q446 250 446 264V330Q446 348 428 348H96Q78 348 78 330V162Q78 140 100 140Z" fill="url(#carrozzeria)"/>
+    <!-- Luce sul tetto e sul montante del parabrezza -->
+    <path d="M100 140H334Q352 140 362 155L366 162H78Q78 140 100 140Z" fill="#ffffff" opacity="0.16"/>
+    <path d="M366 162L402 220" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.22"/>
+    <!-- Finestrino della cabina, con riflesso -->
+    <path d="M350 160H358Q364 160 368 166L398 216Q402 224 394 224H350Q344 224 344 218V166Q344 160 350 160Z" fill="url(#vetro)"/>
+    <path d="M362 162L372 162L356 222L346 222Z" fill="#ffffff" opacity="0.1"/>
+    <!-- Specchietto -->
+    <rect x="396" y="222" width="10" height="20" rx="4" fill="#0d5e77"/>
+    <!-- Porta della cabina e maniglia -->
+    <path d="M334 158V330" stroke="#0b4f64" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+    <rect x="348" y="240" width="18" height="6" rx="3" fill="#0b4f64" opacity="0.8"/>
+    <!-- Fanale, fanalino posteriore e paraurti -->
+    <path d="M436 258H446V280H432Q428 280 428 276V266Q428 258 436 258Z" fill="#ffd27a"/>
+    <rect x="78" y="282" width="7" height="26" rx="3" fill="#ff6b6b"/>
+    <rect x="414" y="328" width="38" height="16" rx="6" fill="#0b4f64"/>
+    <!-- Pacco sul fianco: coperchio, nastro ed etichetta -->
+    <rect x="156" y="186" width="100" height="100" rx="12" fill="#11151b"/>
+    <rect x="162" y="214" width="88" height="4" rx="2" fill="#1b8fae" opacity="0.45"/>
+    <rect x="195" y="186" width="22" height="40" fill="#1b8fae"/>
+    <rect x="172" y="262" width="26" height="8" rx="4" fill="#1b8fae"/>
+    <!-- Passaruota (staccano le ruote dalla carrozzeria) -->
+    <circle cx="160" cy="348" r="48" fill="#141b22"/>
+    <circle cx="368" cy="348" r="48" fill="#141b22"/>
+    <!-- Ruote: gomma, cerchio chiaro, mozzo ottanio -->
+    <circle cx="160" cy="348" r="40" fill="#2a333f"/>
+    <circle cx="160" cy="348" r="25" fill="#e6edf1"/>
+    <circle cx="160" cy="348" r="10" fill="#1b8fae"/>
+    <circle cx="368" cy="348" r="40" fill="#2a333f"/>
+    <circle cx="368" cy="348" r="25" fill="#e6edf1"/>
+    <circle cx="368" cy="348" r="10" fill="#1b8fae"/>
+  </g>
 </svg>

@@ -34,5 +34,5 @@ export function MapView(props: MapViewProps) {
       />
     );
   }
-  return <OsmMap {...props} mode={mode} onToggleMode={onToggleMode} />;
+  return <OsmMap key={props.theme} {...props} mode={mode} onToggleMode={onToggleMode} />;
 }

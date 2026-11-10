@@ -145,6 +145,7 @@ export default function App() {
           onManageTypes={() => openScreen('stopTypes', { backTo: screen.params!.stopId })}
           onChangeAddress={(stopId) => openScreen('search', { routeId: currentRouteId ?? '', stopId })}
           onAddNext={screen.params.fromSearch ? () => openScreen('search', { routeId: screen.params!.fromSearch }) : undefined}
+          onAddNextVoice={screen.params.fromSearch ? () => openScreen('voice', { routeId: screen.params!.fromSearch! }) : undefined}
         />
       )}
       {screen?.name === 'stopTypes' && (
@@ -173,6 +174,7 @@ export default function App() {
           onClose={closeScreen}
           onPickOnMap={() => openScreen('pickOnMap', { routeId: screen.params!.routeId })}
           onPaste={() => openScreen('paste', { routeId: screen.params!.routeId })}
+          onOpenStop={(stopId) => openScreen('stopDetail', { stopId })}
           onAdded={
             screen.params.stopId ? undefined : (stopId) => openScreen('stopDetail', { stopId, fromSearch: screen.params!.routeId })
           }

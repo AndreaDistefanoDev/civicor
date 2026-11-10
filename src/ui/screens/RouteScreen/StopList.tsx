@@ -4,7 +4,6 @@ import type { Stop } from '../../../domain/types';
 import { failReasonLabel } from './StopCard';
 
 function status(s: Stop) {
-  if (s.outcome === 'done') return <Check size={18} className="st ok" aria-label="Effettuata" />;
   if (s.outcome === 'failed') return <X size={18} className="st danger" aria-label="Non riuscita" />;
   if (s.geoStatus === 'uncertain' || s.geoStatus === 'failed')
     return <AlertTriangle size={18} className="st warn" aria-label="Da verificare" />;
@@ -16,7 +15,7 @@ const two = (n: number) => String(n).padStart(2, '0');
 
 /**
  * Elenco delle fermate a "linea del tempo": a sinistra numero d'ordine e orario previsto,
- * al centro indirizzo e città, a destra l'ID della fermata. Prima dell'ottimizzazione al posto del numero c'è un punto.
+ * al centro indirizzo e città, a destra l'ID della fermata (con la spunta verde se fatta). Prima dell'ottimizzazione al posto del numero c'è un punto.
  */
 export function StopList(props: { stops: Stop[]; onOpen: (id: string) => void }) {
   const sorted = [...props.stops].sort((a, b) => (a.sequence ?? a.originalIndex) - (b.sequence ?? b.originalIndex));
@@ -26,7 +25,7 @@ export function StopList(props: { stops: Stop[]; onOpen: (id: string) => void })
         const closed = s.outcome !== 'pending';
         return (
           <li key={s.id}>
-            <button className={`tl-row${closed ? ' closed' : ''}`} onClick={() => props.onOpen(s.id)}>
+            <button className={`tl-row${closed ? ' closed' : ''}`} data-stop-id={s.id} onClick={() => props.onOpen(s.id)}>
               <span className="tl-left">
                 {s.sequence !== undefined ? <span className="tl-num num">{two(i + 1)}</span> : <span className="tl-dot" aria-hidden="true" />}
                 {s.eta && <span className="tl-time num">{s.eta}</span>}
@@ -44,7 +43,14 @@ export function StopList(props: { stops: Stop[]; onOpen: (id: string) => void })
               </span>
               <span className="tl-end">
                 {status(s)}
-                <span className="tl-chip num">ID {s.displayId}</span>
+                {s.outcome === 'done' ? (
+                  <span className="tl-chip num done">
+                    <Check size={14} strokeWidth={3} aria-label="Effettuata" />
+                    <span>ID {s.displayId}</span>
+                  </span>
+                ) : (
+                  <span className="tl-chip num">ID {s.displayId}</span>
+                )}
               </span>
             </button>
           </li>

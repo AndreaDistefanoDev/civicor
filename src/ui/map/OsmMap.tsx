@@ -4,7 +4,7 @@ import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef } from 'react';
 import { stopMarker } from './markers';
-import { FinishTime, LABELS_ZOOM, MapButtons, PIN_COLOR, RAGUSA, drawOrder, fitPadding, type MapImplProps } from './shared';
+import { FinishTime, LABELS_ZOOM, MapButtons, PIN_COLOR, PIN_COLOR_DARK, RAGUSA, drawOrder, fitPadding, type MapImplProps } from './shared';
 
 const STYLES = {
   dark: 'https://tiles.openfreemap.org/styles/fiord',
@@ -34,6 +34,8 @@ export function OsmMap(props: MapImplProps) {
       attributionControl: { compact: true },
     });
     map.current = m;
+    // Mappa nuova (anche dopo il cambio di tema): va inquadrata di nuovo.
+    fitted.current = false;
     const labels = () => container.current?.classList.toggle('show-labels', m.getZoom() >= LABELS_ZOOM);
     m.on('zoom', labels);
     labels();
@@ -55,7 +57,7 @@ export function OsmMap(props: MapImplProps) {
         },
       });
       m.addLayer({ id: 'route-casing', type: 'line', source: 'route', paint: { 'line-color': '#000', 'line-width': 8, 'line-opacity': 0.35 }, layout: { 'line-join': 'round', 'line-cap': 'round' } });
-      m.addLayer({ id: 'route-line', type: 'line', source: 'route', paint: { 'line-color': PIN_COLOR, 'line-width': 4.5 }, layout: { 'line-join': 'round', 'line-cap': 'round' } });
+      m.addLayer({ id: 'route-line', type: 'line', source: 'route', paint: { 'line-color': props.theme === 'dark' ? PIN_COLOR_DARK : PIN_COLOR, 'line-width': 4.5 }, layout: { 'line-join': 'round', 'line-cap': 'round' } });
       drawLine(latest.current.polyline);
     });
     return () => m.remove();
@@ -99,7 +101,9 @@ export function OsmMap(props: MapImplProps) {
     });
     if (!fitted.current && located.length > 0) {
       fitted.current = true;
-      fitAll();
+      // Prima del caricamento la mappa non conosce ancora la sua altezza vera: i segnaposti finirebbero sotto la scheda.
+      if (m.loaded()) fitAll();
+      else m.once('load', fitAll);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.stops, props.stopTypes, props.selectedStopId]);
@@ -134,6 +138,7 @@ export function OsmMap(props: MapImplProps) {
     const m = map.current;
     const pts = latest.current.stops.filter((s) => s.location).map((s) => [s.location!.lng, s.location!.lat] as [number, number]);
     if (!m || pts.length === 0) return;
+    m.resize();
     const bounds = pts.reduce((b, p) => b.extend(p), new LngLatBounds(pts[0], pts[0]));
     m.fitBounds(bounds, { padding: fitPadding(latest.current.bottomInset), maxZoom: 16, duration: 400 });
   }

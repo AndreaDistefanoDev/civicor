@@ -12,7 +12,7 @@ export default defineConfig(({ command }) => ({
     ...(command === 'serve' && !process.env.VITEST && !process.env.CIVICOR_HTTP ? [basicSsl()] : []),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/icon.svg'],
+      includeAssets: ['icons/icon.svg', 'icons/icon-180.png'],
       manifest: {
         name: 'Civicor',
         short_name: 'Civicor',

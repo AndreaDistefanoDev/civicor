@@ -1,7 +1,8 @@
-import { MapPinPlus, Search, X } from 'lucide-react';
+import { Check, CornerDownRight, MapPin, MapPinPlus, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { withTypedHouseNumber } from '../../domain/address/houseNumber';
-import type { LatLng } from '../../domain/types';
+import { searchRouteStops, streetCompletions } from '../../domain/address/routeSearch';
+import type { LatLng, Stop } from '../../domain/types';
 import { resolveSuggestion, type AddressSuggestion, type Geocoder, type LocatedSuggestion } from '../../services/geocoder';
 import { OrsError } from '../../services/ors/orsClient';
 import './common.css';
@@ -25,8 +26,13 @@ export function AddressAutocomplete(props: {
   /** Riceve il suggerimento completo di posizione (letto dal fornitore se serve). */
   onPick: (s: LocatedSuggestion) => void;
   footer?: React.ReactNode;
+  /** Fermate già nel giro: quelle che corrispondono si mostrano per prime ("In questo percorso"). */
+  routeStops?: Stop[];
+  onOpenStop?: (stopId: string) => void;
 }) {
   const [text, setText] = useState('');
+  const [showAll, setShowAll] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
   const [results, setResults] = useState<AddressSuggestion[]>([]);
   const [error, setError] = useState<string>();
   const seq = useRef(0);
@@ -63,18 +69,31 @@ export function AddressAutocomplete(props: {
     }
   };
 
+  const inRoute = props.routeStops ? searchRouteStops(props.routeStops, text) : [];
+  const shownInRoute = showAll ? inRoute : inRoute.slice(0, 4);
+  const completions = streetCompletions(results.map((r) => r.address.street), text);
+
+  const complete = (street: string) => {
+    setText(`${street} `);
+    input.current?.focus();
+  };
+
   return (
     <div className="autocomplete">
       <div className="search-field">
         <Search size={20} className="search-field-icon" aria-hidden="true" />
         <input
+          ref={input}
           aria-label="Cerca indirizzo"
           autoFocus={props.autoFocus}
           placeholder={props.placeholder ?? 'Digita un indirizzo'}
           value={text}
           enterKeyHint="search"
           autoComplete="off"
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            setShowAll(false);
+          }}
         />
         {text && (
           <button className="search-field-clear" aria-label="Cancella" onClick={() => setText('')}>
@@ -83,8 +102,48 @@ export function AddressAutocomplete(props: {
         )}
       </div>
       {error && <p className="autocomplete-error">{error}</p>}
-      {results.length > 0 && <div className="section-title autocomplete-title">Aggiungi una nuova fermata</div>}
+      {inRoute.length > 0 && (
+        <>
+          <div className="section-title autocomplete-title">In questo percorso ({inRoute.length})</div>
+          <ul className="autocomplete-list">
+            {shownInRoute.map((s) => (
+              <li key={s.id}>
+                <button className="row" onClick={() => props.onOpenStop?.(s.id)}>
+                  <MapPin size={22} className="autocomplete-icon" aria-hidden="true" />
+                  <span className="grow">
+                    <span className="autocomplete-main">{s.address.street}</span>
+                    <span className="autocomplete-sub muted">{s.address.city}</span>
+                  </span>
+                  {s.eta && <span className="ac-chip num">{s.eta}</span>}
+                  {s.outcome === 'done' ? (
+                    <span className="ac-chip num done">
+                      <Check size={14} strokeWidth={3} aria-label="Effettuata" />
+                      ID {s.displayId}
+                    </span>
+                  ) : (
+                    <span className="ac-chip num">ID {s.displayId}</span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {inRoute.length > shownInRoute.length && (
+            <button className="link-btn ac-more" onClick={() => setShowAll(true)}>
+              Mostra altre {inRoute.length - shownInRoute.length} fermate di questo percorso
+            </button>
+          )}
+        </>
+      )}
+      {(results.length > 0 || completions.length > 0) && <div className="section-title autocomplete-title">Aggiungi una nuova fermata</div>}
       <ul className="autocomplete-list">
+        {completions.map((street) => (
+          <li key={`c-${street}`}>
+            <button className="row" aria-label={`Completa: ${street}`} onClick={() => complete(street)}>
+              <CornerDownRight size={22} className="autocomplete-icon" aria-hidden="true" />
+              <span className="grow autocomplete-main">{street}</span>
+            </button>
+          </li>
+        ))}
         {results.map((s) => (
           <li key={s.placeId ?? `${s.label}-${s.location?.lat}-${s.location?.lng}`}>
             <button className="row" onClick={() => void pick(s)}>

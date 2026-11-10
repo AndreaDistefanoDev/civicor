@@ -10,7 +10,7 @@ const ABBREVIATIONS: Array<[RegExp, string]> = [
   [/\bv\.\s/g, 'via '],
 ];
 
-function fold(text: string): string {
+export function fold(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
 

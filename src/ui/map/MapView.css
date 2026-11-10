@@ -7,7 +7,7 @@
 /* Segnaposto compatto, misurato sulle app di percorso dei corrieri: quadratino 21×21 con angoli di 4 px,
    bordo di 1 px, numero 11 px normale e punta piccola in basso. Il bottone lo sposta la mappa. */
 .stop-pin {
-  --pin: #2962ff; --pin-bg: #ffffff; --pin-ink: var(--pin);
+  --pin: #0e7490; --pin-bg: #ffffff; --pin-ink: var(--pin);
   position: relative; display: block; width: 23px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer;
   filter: drop-shadow(0 2px 2.5px rgba(30, 40, 60, 0.28));
 }
@@ -28,15 +28,15 @@
 }
 .stop-pin-num svg { width: 13px; height: 13px; }
 .stop-pin.uncertain { --pin: #e2642f; }
-/* Fermata attuale: piena di blu, numero bianco, un po' più grande. */
+/* Fermata attuale: piena di colore, numero bianco, un po' più grande. */
 .stop-pin.current { width: 27px; height: 31px; z-index: 3; }
 .stop-pin.current .stop-pin-head { width: 25px; height: 25px; border-radius: 5px; --pin-bg: var(--pin); }
 .stop-pin.current .stop-pin-num { color: #fff; font-size: 13px; font-weight: 500; }
 /* Fermata chiusa (riuscita o no): stessa forma, spenta in grigio-azzurro con il numero grigio. */
 .stop-pin.off { --pin: #d7dae2; --pin-bg: #f1f2f7; --pin-ink: #6c7993; filter: drop-shadow(0 1.5px 2px rgba(30, 40, 60, 0.2)); }
 
-/* Mappa scura: stessa forma, colori scuri (fondo quasi nero e bordo blu acceso; chiuse grigio-ardesia). */
-:root[data-theme='dark'] .stop-pin { --pin: #3b78ff; --pin-bg: #0f1626; --pin-ink: #5a92ff; }
+/* Mappa scura: stessa forma, colori scuri (fondo quasi nero e bordo ottanio; chiuse grigio-ardesia). */
+:root[data-theme='dark'] .stop-pin { --pin: #1b8fae; --pin-bg: #0d1a1f; --pin-ink: #5ab9d6; }
 :root[data-theme='dark'] .stop-pin.uncertain { --pin: #ff7a4d; --pin-ink: #ff8a66; }
 :root[data-theme='dark'] .stop-pin.current .stop-pin-head { --pin-bg: var(--pin); }
 :root[data-theme='dark'] .stop-pin.off { --pin: #424d60; --pin-bg: #2b3443; --pin-ink: #c9cfd9; }

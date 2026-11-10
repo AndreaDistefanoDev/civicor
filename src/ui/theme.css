@@ -12,10 +12,10 @@
   --line: #313b48;
   --text: #f1f4f8;
   --muted: #9aa5b3;       /* nebbia — 4.9:1 su --surface */
-  --accent: #4d8dff;      /* blu azione */
+  --accent: #1b8fae;      /* ottanio: azione */
   --accent-ink: #ffffff;
-  --accent-text: #7aaaff;
-  --accent-soft: rgba(77, 141, 255, 0.16);
+  --accent-text: #6cc3dc;
+  --accent-soft: rgba(27, 143, 174, 0.2);
   --ok: #46d483;
   --ok-soft: rgba(70, 212, 131, 0.14);
   --warn: #ff8a66;        /* da verificare */
@@ -35,10 +35,10 @@
   --line: #e3e6eb;
   --text: #1b1f24;
   --muted: #6b7380;
-  --accent: #1f6bff;      /* blu azione */
+  --accent: #0e7490;      /* ottanio: azione */
   --accent-ink: #ffffff;
-  --accent-text: #1a5fe0;
-  --accent-soft: #e8f0ff;
+  --accent-text: #0b5d74;
+  --accent-soft: #e2f1f6;
   --ok: #128a43;
   --ok-soft: #e6f5ec;
   --warn: #c2461f;

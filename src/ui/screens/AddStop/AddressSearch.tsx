@@ -1,6 +1,8 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { ChevronRight, ClipboardList, Map } from 'lucide-react';
 import { useState } from 'react';
 import { addStopFromSuggestion, changeStopAddress } from '../../../data/manualAdd';
+import { listStops } from '../../../data/repos';
 import type { LatLng } from '../../../domain/types';
 import type { Geocoder } from '../../../services/geocoder';
 import { geocodeQueue } from '../../appServices';
@@ -20,7 +22,10 @@ export function AddressSearch(props: {
   onPaste: () => void;
   /** Se presente, dopo la scelta si apre la scheda della fermata appena aggiunta. */
   onAdded?: (stopId: string) => void;
+  /** Apre una fermata già nel giro trovata con la ricerca. */
+  onOpenStop?: (stopId: string) => void;
 }) {
+  const routeStops = useLiveQuery(() => listStops(props.routeId), [props.routeId]);
   const [added, setAdded] = useState<string>();
   const nearby = useNearbyFocus(props.routeId);
   const focus = props.focus ?? nearby;
@@ -39,6 +44,8 @@ export function AddressSearch(props: {
         focus={focus}
         autoFocus
         placeholder="Digita fermate"
+        routeStops={props.stopId ? undefined : routeStops}
+        onOpenStop={props.onOpenStop}
         onPick={async (s) => {
           if (props.stopId) {
             await changeStopAddress(props.stopId, s);

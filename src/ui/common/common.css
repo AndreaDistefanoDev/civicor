@@ -80,3 +80,11 @@
 .autocomplete-error { margin: 0 16px 8px; color: var(--warn); }
 .autocomplete-warn { display: block; font-size: 13px; color: var(--warn); font-weight: 600; }
 .autocomplete-dist { color: var(--muted); font-size: 16px; white-space: nowrap; }
+
+/* Fermate già nel giro: orario e ID in piccole etichette. */
+.ac-chip {
+  display: inline-grid; place-items: center; min-width: 30px; height: 24px; padding: 0 7px; border-radius: 6px; flex: none;
+  background: var(--accent-soft); color: var(--accent-text); font-size: var(--t-xs); font-weight: 600; align-self: center;
+}
+.ac-chip.done { display: inline-flex; gap: 3px; background: var(--ok-soft); color: var(--ok); }
+.ac-more { display: block; margin: 0 16px 8px; }

@@ -112,3 +112,16 @@ it('con la X si passa all\'elenco del percorso e si torna alla fermata attuale',
   await userEvent.click(screen.getByRole('button', { name: 'Torna alla fermata attuale' }));
   expect(await screen.findByRole('region', { name: 'Fermata attuale' })).toBeInTheDocument();
 });
+
+it('elenco durante il giro: spunta verde nell\'ID delle fatte e pulsante per scorrere alla fermata attuale', async () => {
+  await db.stops.update('a', { outcome: 'done' });
+  const scrolled: string[] = [];
+  Element.prototype.scrollIntoView = function (this: Element) { scrolled.push(this.textContent ?? ''); };
+  renderScreen(routeId);
+  await userEvent.click(await screen.findByRole('button', { name: 'Chiudi scheda' }));
+  const done = screen.getByRole('button', { name: /Via Prima, 1/ });
+  expect(within(done).getByText('ID 1').closest('.tl-chip')).toHaveClass('done');
+  expect(within(screen.getByRole('button', { name: /Via Seconda, 2/ })).getByText('ID 2').closest('.tl-chip')).not.toHaveClass('done');
+  await userEvent.click(screen.getByRole('button', { name: 'Scorri alla fermata attuale' }));
+  expect(scrolled.some((t) => t.includes('Via Seconda, 2'))).toBe(true);
+});

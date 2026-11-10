@@ -71,7 +71,7 @@ it('impostazioni predefinite su database vuoto', async () => {
 it('crea il tipo Standard una sola volta', async () => {
   await listStopTypes();
   const types = await listStopTypes();
-  expect(types).toEqual([{ id: 'standard', name: 'Standard', color: '#1f6bff', position: 0, builtIn: true }]);
+  expect(types).toEqual([{ id: 'standard', name: 'Standard', color: '#0e7490', position: 0, builtIn: true }]);
 });
 
 it('il tipo Standard non si elimina', async () => {

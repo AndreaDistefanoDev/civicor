@@ -42,7 +42,9 @@ export function FinishTime(props: { time?: string }) {
     </div>
   );
 }
-export const PIN_COLOR = '#1f6bff';
+export const PIN_COLOR = '#0e7490';
+/** Stesso ottanio, più chiaro per la mappa scura. */
+export const PIN_COLOR_DARK = '#1b8fae';
 
 /** Ordine di disegno: prima le fermate chiuse, poi quelle da fare, per ultima quella attuale (sopra a tutte). */
 export function drawOrder(stops: Stop[], currentId?: string): Stop[] {

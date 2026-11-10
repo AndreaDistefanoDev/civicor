@@ -1,4 +1,5 @@
 import type { Stop } from '../../domain/types';
+import { PIN_COLOR } from './shared';
 
 /** "Via Roma 28, Scicli" → "V Roma 28, Scicl": corta come sulle mappe delle app di percorso. */
 function shortStreet(street: string): string {
@@ -20,7 +21,8 @@ export function stopMarker(stop: Stop, color: string, current: boolean): HTMLEle
   // Percorso non ancora ottimizzato: le fermate non hanno un ordine, il segnaposto mostra un "+".
   const fresh = !closed && !current && !uncertain && stop.sequence === undefined;
   el.className = `stop-pin${current && !closed ? ' current' : ''}${closed ? ' off' : ''}${uncertain ? ' uncertain' : ''}${fresh ? ' new' : ''}`;
-  if (!closed && !uncertain) el.style.setProperty('--pin', color);
+  // Il colore standard lo sceglie il tema (più chiaro sulla mappa scura); i tipi personalizzati usano il loro.
+  if (!closed && !uncertain && color !== PIN_COLOR) el.style.setProperty('--pin', color);
   const state = closed ? `, ${stop.outcome === 'done' ? 'effettuata' : 'non riuscita'}` : '';
   el.setAttribute('aria-label', `Fermata ${stop.displayId}${state}: ${stop.address.street}`);
   const head = document.createElement('span');

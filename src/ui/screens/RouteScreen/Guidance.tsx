@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Check, CircleCheckBig, CopyPlus, Map as MapIcon, Navigation, ShieldCheck } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, CircleCheckBig, CopyPlus, Map as MapIcon, Navigation, ShieldCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { completeRoute, markOutcome, nextStop, routeSummary, undoOutcome, upcomingStops } from '../../../data/outcomes';
 import { duplicateRoute, getSettings, updateRoute } from '../../../data/repos';
 import { openExternal } from '../../../device/openExternal';
@@ -206,8 +207,27 @@ export function Guidance(props: {
 
 /** Elenco del percorso durante il giro (dopo aver chiuso la scheda della fermata). */
 function GuidanceList(props: { route: Route; stops: Stop[]; onShowCard?: () => void; openStop: (id: string) => void }) {
+  const list = useRef<HTMLDivElement>(null);
+  const current = [...props.stops]
+    .sort((a, b) => (a.sequence ?? a.originalIndex) - (b.sequence ?? b.originalIndex))
+    .find((s) => s.outcome === 'pending');
+  const row = () => list.current?.querySelector(`[data-stop-id="${current?.id}"]`);
+  const scrollToCurrent = () => row()?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  // Il pulsante compare solo quando la fermata attuale è fuori vista, con la freccia verso di lei.
+  const [where, setWhere] = useState<'visible' | 'above' | 'below'>('below');
+  useEffect(() => {
+    const el = row();
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([e]) => setWhere(e.isIntersecting ? 'visible' : e.boundingClientRect.top < (e.rootBounds?.top ?? 0) ? 'above' : 'below'),
+      { root: list.current?.closest('.sheet-body'), threshold: 0.6 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id]);
   return (
-    <>
+    <div ref={list}>
       {props.onShowCard && (
         <div className="list-current">
           <button className="btn-primary" onClick={props.onShowCard}>
@@ -222,6 +242,13 @@ function GuidanceList(props: { route: Route; stops: Stop[]; onShowCard?: () => v
           Contrassegna percorso come completato
         </button>
       </div>
-    </>
+      {current && where !== 'visible' && (
+        <div className="list-jump">
+          <button className="round-btn" aria-label="Scorri alla fermata attuale" onClick={scrollToCurrent}>
+            {where === 'above' ? <ChevronUp size={24} aria-hidden="true" /> : <ChevronDown size={24} aria-hidden="true" />}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

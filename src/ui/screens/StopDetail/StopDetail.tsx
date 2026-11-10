@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
-  AlertTriangle, ArrowDownToLine, Check, ChevronRight, Clock, CopyPlus, Layers, ListOrdered, Loader2, MapPinned,
+  AlertTriangle, ArrowDownToLine, Check, ChevronRight, Clock, CopyPlus, Layers, ListOrdered, Loader2, MapPinned, Mic,
   PackageSearch, Phone, Plus, ScanBarcode, Timer, Trash2, User,
 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
@@ -60,6 +60,8 @@ export function StopDetail(props: {
   onChangeAddress: (stopId: string) => void;
   /** Aperta subito dopo l'aggiunta dalla ricerca: torna alla ricerca per la fermata successiva. */
   onAddNext?: () => void;
+  /** Come sopra, ma la prossima fermata si detta a voce. */
+  onAddNextVoice?: () => void;
 }) {
   const stop = useLiveQuery(() => getStop(props.stopId), [props.stopId]);
   const types = useLiveQuery(listStopTypes, []);
@@ -77,6 +79,11 @@ export function StopDetail(props: {
             <Plus size={20} aria-hidden="true" />
             Aggiungi prossima fermata
           </button>
+          {props.onAddNextVoice && (
+            <button className="btn-secondary add-next-voice" aria-label="Aggiungi prossima con la voce" onClick={props.onAddNextVoice}>
+              <Mic size={20} aria-hidden="true" />
+            </button>
+          )}
         </div>
       )}
       <div className="stop-head">

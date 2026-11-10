@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { stopMarker } from '../markers';
-import { FinishTime, LABELS_ZOOM, MapButtons, PIN_COLOR, RAGUSA, drawOrder, fitPadding, type MapImplProps } from '../shared';
+import { FinishTime, LABELS_ZOOM, MapButtons, PIN_COLOR, PIN_COLOR_DARK, RAGUSA, drawOrder, fitPadding, type MapImplProps } from '../shared';
 import { loadGoogleMaps, removeAuthListener } from './loadGoogleMaps';
 
 // Map ID di prova fornito da Google: serve per i segnaposti personalizzati e per inclinare la mappa (3D).
@@ -45,6 +45,7 @@ export function GoogleMap(props: MapImplProps & { apiKey: string; onAuthFailure:
       m.addListener('zoom_changed', labels);
       labels();
       AdvancedMarker.current = AdvancedMarkerElement;
+      fitted.current = false; // mappa nuova: va inquadrata di nuovo
       setReady(true);
     })().catch(onFail);
     return () => {
@@ -65,7 +66,7 @@ export function GoogleMap(props: MapImplProps & { apiKey: string; onAuthFailure:
       path.length > 1
         ? [
             new google.maps.Polyline({ map: m, path, strokeColor: '#000', strokeOpacity: 0.35, strokeWeight: 9, zIndex: 1 }),
-            new google.maps.Polyline({ map: m, path, strokeColor: PIN_COLOR, strokeOpacity: 1, strokeWeight: 5, zIndex: 2 }),
+            new google.maps.Polyline({ map: m, path, strokeColor: props.theme === 'dark' ? PIN_COLOR_DARK : PIN_COLOR, strokeOpacity: 1, strokeWeight: 5, zIndex: 2 }),
           ]
         : [];
   }, [props.polyline, ready]);

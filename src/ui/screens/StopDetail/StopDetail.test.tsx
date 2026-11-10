@@ -93,3 +93,10 @@ it('aperta dalla lista non mostra "+ Aggiungi prossima fermata"', async () => {
   await screen.findByText('Via Esempio, 12');
   expect(screen.queryByRole('button', { name: 'Aggiungi prossima fermata' })).toBeNull();
 });
+
+it('aperta dalla ricerca offre anche "Aggiungi prossima" con la voce', async () => {
+  const onAddNextVoice = vi.fn();
+  renderDetail({ onAddNext: vi.fn(), onAddNextVoice });
+  await userEvent.click(await screen.findByRole('button', { name: 'Aggiungi prossima con la voce' }));
+  expect(onAddNextVoice).toHaveBeenCalled();
+});

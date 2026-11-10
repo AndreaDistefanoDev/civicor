@@ -212,6 +212,8 @@
   background: var(--accent-soft); color: var(--accent-text); font-size: var(--t-xs); font-weight: 600;
 }
 .tl-chip.icon { min-width: 28px; padding: 0; }
+/* Fermata fatta: spunta verde dentro l'etichetta dell'ID. */
+.tl-chip.done { display: inline-flex; gap: 3px; background: var(--ok-soft); color: var(--ok); }
 .tl-row.closed .tl-title { color: var(--muted); }
 .tl-setting .tl-chip { background: var(--surface-2); color: var(--muted); }
 
@@ -272,3 +274,15 @@
 }
 .chip-btn svg { color: var(--accent-text); }
 .chip-btn:active { background: var(--surface-2); }
+
+/* Pulsante rotondo che resta in basso a destra e scorre l'elenco fino alla fermata attuale. */
+.list-jump {
+  position: sticky; bottom: calc(env(safe-area-inset-bottom) + var(--s-4)); height: 0;
+  display: flex; justify-content: flex-end; padding-right: var(--s-4); pointer-events: none;
+}
+.list-jump .round-btn {
+  pointer-events: auto; transform: translateY(-100%); width: 48px; height: 48px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--surface); color: var(--text);
+  border: 1px solid var(--line); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.list-jump .round-btn:active { transform: translateY(-100%) scale(0.95); }
